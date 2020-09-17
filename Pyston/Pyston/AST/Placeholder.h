@@ -33,12 +33,18 @@ public:
     return "_" + std::to_string(m_id);
   }
 
-  T eval(const std::vector<T>& values) const final {
-    return values.at(m_id);
+  T eval() const final {
+    return m_value;
+  }
+
+  Placeholder& operator = (T value) {
+    m_value = value;
+    return *this;
   }
 
 private:
   size_t m_id;
+  T m_value;
 };
 
 } // end of namespace Pyston

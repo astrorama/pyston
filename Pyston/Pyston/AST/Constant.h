@@ -32,7 +32,7 @@ public:
     return std::to_string(m_value);
   }
 
-  T eval(const std::vector<T>&) const final {
+  T eval() const final {
     return m_value;
   }
 

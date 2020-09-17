@@ -64,8 +64,10 @@ public:
         std::vector<double> values;
 
         for (size_t arg = 0; arg < nparams; ++arg) {
-          arguments.append(std::make_shared<Placeholder<double>>(arg));
+          auto placeholder = std::make_shared<Placeholder<double>>(arg);
+          arguments.append(placeholder);
           values.emplace_back(::drand48());
+          *placeholder = values.back();
         }
 
         py::object func = evaluate[nparams];
@@ -89,7 +91,7 @@ public:
         logger.info() << "Timing AST call, " << REPEATS << " times";
         timer.start();
         for (int j = 0; j < REPEATS; j++) {
-          node->eval(values);
+          node->eval();
         }
         timer.stop();
         logger.info() << '\t' << timer.elapsed().wall / float(REPEATS) << " ns / call";

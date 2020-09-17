@@ -27,21 +27,25 @@
 
 namespace Pyston {
 
-template<typename T, typename...Args>
-static boost::python::object makeUnary(Args&& ...args) {
+template<typename T, template<class> class Functor>
+static boost::python::object makeUnary(const std::string& repr) {
+  typedef decltype(std::declval<Functor<T>>()(T())) R;
+
   return boost::python::make_function(
-    UnaryOperatorFactory<T>(std::forward<Args>(args)...),
+    UnaryOperatorFactory<R, T>(Functor<T>(), repr),
     boost::python::default_call_policies(),
     boost::mpl::vector<std::shared_ptr<Node<T>>, const std::shared_ptr<Node<T>>&>()
   );
 }
 
-template<typename T, typename...Args>
-static boost::python::object makeBinary(Args&& ...args) {
+template<typename T, template<class> class Functor>
+static boost::python::object makeBinary(const std::string& repr, bool reverse = false) {
+  typedef decltype(std::declval<Functor<T>>()(T(), T())) R;
+
   return boost::python::make_function(
-    BinaryOperatorFactory<T>(std::forward<Args>(args)...),
+    BinaryOperatorFactory<R, T>(Functor<T>(), repr, reverse),
     boost::python::default_call_policies(),
-    boost::mpl::vector<std::shared_ptr<Node<T>>, const std::shared_ptr<Node<T>>&, const std::shared_ptr<Node<T>>&>()
+    boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&, const std::shared_ptr<Node<T>>&>()
   );
 }
 }

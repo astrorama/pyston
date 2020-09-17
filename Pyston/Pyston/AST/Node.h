@@ -32,7 +32,7 @@ public:
 
   virtual std::string repr() const = 0;
 
-  virtual T eval(const std::vector<T>& values) const = 0;
+  virtual T eval() const = 0;
 };
 
 } // end of namespace Pyston

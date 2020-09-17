@@ -25,38 +25,38 @@
 
 namespace Pyston {
 
-template<typename T>
-class BinaryOperator : public Node<T> {
+template<typename R, typename T>
+class BinaryOperator : public Node<R> {
 public:
   BinaryOperator(const std::shared_ptr<Node<T>>& lval, const std::shared_ptr<Node<T>>& rval,
-                 std::function<T(T, T)> functor, const std::string& repr)
+                 std::function<R(T, T)> functor, const std::string& repr)
     : m_lval{lval}, m_rval{rval}, m_functor{functor}, m_repr{repr} {}
 
   std::string repr() const override {
     return std::string("(") + m_lval->repr() + m_repr + m_rval->repr() + ")";
   }
 
-  T eval(const std::vector<T>& values) const final {
-    return m_functor(m_lval->eval(values), m_rval->eval(values));
+  R eval() const final {
+    return m_functor(m_lval->eval(), m_rval->eval());
   }
 
 private:
   std::shared_ptr<Node<T>> m_lval, m_rval;
-  std::function<T(T, T)> m_functor;
+  std::function<R(T, T)> m_functor;
   std::string m_repr;
 };
 
-template<typename T>
+template<typename R, typename T>
 class BinaryOperatorFactory {
 public:
-  BinaryOperatorFactory(std::function<T(T, T)> functor, const std::string& repr, bool reverse=false)
+  BinaryOperatorFactory(std::function<R(T, T)> functor, const std::string& repr, bool reverse=false)
     : m_functor{functor}, m_repr{repr}, m_reverse{reverse} {}
 
-  std::shared_ptr<Node<T>> operator()(const std::shared_ptr<Node<T>>& left, const std::shared_ptr<Node<T>>& right) const {
+  std::shared_ptr<Node<R>> operator()(const std::shared_ptr<Node<T>>& left, const std::shared_ptr<Node<T>>& right) const {
     if (m_reverse)
-      return std::make_shared<BinaryOperator<T>>(right, left, m_functor, m_repr);
+      return std::make_shared<BinaryOperator<R, T>>(right, left, m_functor, m_repr);
     else
-      return std::make_shared<BinaryOperator<T>>(left, right, m_functor, m_repr);
+      return std::make_shared<BinaryOperator<R, T>>(left, right, m_functor, m_repr);
   }
 
 private:

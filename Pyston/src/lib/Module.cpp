@@ -18,6 +18,7 @@
 
 #include <boost/python.hpp>
 #include "Pyston/ExceptionRaiser.h"
+#include "Pyston/Functors.h"
 #include "Pyston/Helpers.h"
 #include "Pyston/AST/Constant.h"
 #include "Pyston/AST/Placeholder.h"
@@ -51,86 +52,58 @@ struct NodeConverter {
 
 
 template<typename T>
-static T identity(T val) {
-  return val;
-}
-
-template<typename T>
 static void registerNode() {
-  // Force casting to the proper type
-  T (*_pow)(T, T) = std::pow;
-  T (*_abs)(T) = std::abs;
-  T (*_round)(T) = std::round;
-  T (*_exp)(T) = std::exp;
-  T (*_exp2)(T) = std::exp2;
-  T (*_log)(T) = std::log;
-  T (*_log2)(T) = std::log2;
-  T (*_log10)(T) = std::log10;
-  T (*_sqrt)(T) = std::sqrt;
-  T (*_sin)(T) = std::sin;
-  T (*_cos)(T) = std::cos;
-  T (*_tan)(T) = std::tan;
-  T (*_arcsin)(T) = std::asin;
-  T (*_arccos)(T) = std::acos;
-  T (*_arctan)(T) = std::atan;
-  T (*_sinh)(T) = std::sinh;
-  T (*_cosh)(T) = std::cosh;
-  T (*_tanh)(T) = std::tanh;
-  T (*_arcsinh)(T) = std::asinh;
-  T (*_arccosh)(T) = std::acosh;
-  T (*_arctanh)(T) = std::atanh;
-
   py::class_<Node<T>, boost::noncopyable> node("Node", "AST Node", py::no_init);
 
   // https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types
   node
-    .def("__add__", makeBinary<T>(std::plus<T>(), "+"))
-    .def("__sub__", makeBinary<T>(std::minus<T>(), "-"))
-    .def("__mul__", makeBinary<T>(std::multiplies<T>(), "*"))
-    .def("__truediv__", makeBinary<T>(std::divides<T>(), "/"))
-    .def("__pow__", makeBinary<T>(_pow, "^"))
-    .def("__radd__", makeBinary<T>(std::plus<T>(), "+", true))
-    .def("__rsub__", makeBinary<T>(std::minus<T>(), "-", true))
-    .def("__rmul__", makeBinary<T>(std::multiplies<T>(), "*", true))
-    .def("__rtruediv__", makeBinary<T>(std::divides<T>(), "/", true))
-    .def("__rpow__", makeBinary<T>(_pow, "^", true))
-    .def("__neg__", makeUnary<T>(std::negate<T>(), "-"))
-    .def("__pos__", makeUnary<T>(&identity<T>, "+"))
-    .def("__abs__", makeUnary<T>(_abs, "abs"))
-    .def("__round__", makeUnary<T>(_round, "round"));
+    .def("__add__", makeBinary<T, std::plus>("+"))
+    .def("__sub__", makeBinary<T, std::minus>("-"))
+    .def("__mul__", makeBinary<T, std::multiplies>("*"))
+    .def("__truediv__", makeBinary<T, std::divides>("/"))
+    .def("__pow__", makeBinary<T, Pow>("^"))
+    .def("__radd__", makeBinary<T, std::plus>("+", true))
+    .def("__rsub__", makeBinary<T, std::minus>("-", true))
+    .def("__rmul__", makeBinary<T, std::multiplies>("*", true))
+    .def("__rtruediv__", makeBinary<T, std::divides>("/", true))
+    .def("__rpow__", makeBinary<T, Pow>("^", true))
+    .def("__neg__", makeUnary<T, std::negate>("-"))
+    .def("__pos__", makeUnary<T, Identity>("+"))
+    .def("__abs__", makeUnary<T, Abs>("abs"))
+    .def("__round__", makeUnary<T, Round>("round"));
 
   // https://docs.python.org/3/reference/datamodel.html#basic-customization
   node
-    .def("__lt__", makeBinary<T>(std::less<T>(), "<"))
-    .def("__le__", makeBinary<T>(std::less_equal<T>(), "<="))
-    .def("__eq__", makeBinary<T>(std::equal_to<T>(), "=="))
-    .def("__ne__", makeBinary<T>(std::not_equal_to<T>(), "!="))
-    .def("__gt__", makeBinary<T>(std::greater<T>(), ">"))
-    .def("__ge__", makeBinary<T>(std::greater_equal<T>(), ">="));
+    .def("__lt__", makeBinary<T, std::less>("<"))
+    .def("__le__", makeBinary<T, std::less_equal>("<="))
+    .def("__eq__", makeBinary<T, std::equal_to>("=="))
+    .def("__ne__", makeBinary<T, std::not_equal_to>("!="))
+    .def("__gt__", makeBinary<T, std::greater>(">"))
+    .def("__ge__", makeBinary<T, std::greater_equal>(">="));
 
   // Functions
   // When using numpy methods, numpy will delegate to these
   // Taken from here, although there are a bunch not implemented:
   // https://numpy.org/devdocs/reference/ufuncs.html
   node
-    .def("exp", makeUnary<T>(_exp, "exp"))
-    .def("exp2", makeUnary<T>(_exp2, "exp2"))
-    .def("log", makeUnary<T>(_log, "log"))
-    .def("log2", makeUnary<T>(_log2, "log2"))
-    .def("log10", makeUnary<T>(_log10, "log10"))
-    .def("sqrt", makeUnary<T>(_sqrt, "sqrt"))
-    .def("sin", makeUnary<T>(_sin, "sin"))
-    .def("cos", makeUnary<T>(_cos, "cos"))
-    .def("tan", makeUnary<T>(_tan, "tan"))
-    .def("arcsin", makeUnary<T>(_arcsin, "arcsin"))
-    .def("arccos", makeUnary<T>(_arccos, "arccos"))
-    .def("arctan", makeUnary<T>(_arctan, "arctan"))
-    .def("sinh", makeUnary<T>(_sinh, "sinh"))
-    .def("cosh", makeUnary<T>(_cosh, "cosh"))
-    .def("tanh", makeUnary<T>(_tanh, "tanh"))
-    .def("arcsinh", makeUnary<T>(_arcsinh, "arcsinh"))
-    .def("arccosh", makeUnary<T>(_arccosh, "arccosh"))
-    .def("arctanh", makeUnary<T>(_arctanh, "arctanh"));
+    .def("exp", makeUnary<T, Exp>("exp"))
+    .def("exp2", makeUnary<T, Exp2>("exp2"))
+    .def("log", makeUnary<T, Log>("log"))
+    .def("log2", makeUnary<T, Log2>("log2"))
+    .def("log10", makeUnary<T, Log10>("log10"))
+    .def("sqrt", makeUnary<T, Sqrt>("sqrt"))
+    .def("sin", makeUnary<T, Sin>("sin"))
+    .def("cos", makeUnary<T, Cos>("cos"))
+    .def("tan", makeUnary<T, Tan>("tan"))
+    .def("arcsin", makeUnary<T, ArcSin>("arcsin"))
+    .def("arccos", makeUnary<T, ArcCos>("arccos"))
+    .def("arctan", makeUnary<T, ArcTan>("arctan"))
+    .def("sinh", makeUnary<T, Sinh>("sinh"))
+    .def("cosh", makeUnary<T, Cosh>("cosh"))
+    .def("tanh", makeUnary<T, Tanh>("tanh"))
+    .def("arcsinh", makeUnary<T, ArcSinh>("arcsinh"))
+    .def("arccosh", makeUnary<T, ArcCosh>("arccosh"))
+    .def("arctanh", makeUnary<T, ArcTanh>("arctanh"));
 
   // Can not be used in conditionals!
   node.def("__bool__", py::make_function(

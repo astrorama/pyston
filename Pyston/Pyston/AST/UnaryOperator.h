@@ -27,8 +27,8 @@
 
 namespace Pyston {
 
-template<typename T>
-class UnaryOperator : public Node<T> {
+template<typename R, typename T>
+class UnaryOperator : public Node<R> {
 public:
   UnaryOperator(const std::shared_ptr<Node<T>>& node, std::function<T(T)> functor, const std::string&repr)
     : m_node{node}, m_functor{functor}, m_repr{repr} {}
@@ -37,24 +37,24 @@ public:
     return std::string("(") + m_repr + m_node->repr() + ")";
   }
 
-  T eval(const std::vector<T>& values) const final {
-    return m_functor(m_node->eval(values));
+  R eval() const final {
+    return m_functor(m_node->eval());
   }
 
 private:
   std::shared_ptr<Node<T>> m_node;
-  std::function<T(T)> m_functor;
+  std::function<R(T)> m_functor;
   std::string m_repr;
 };
 
-template<typename T>
+template<typename R, typename T>
 class UnaryOperatorFactory {
 public:
   UnaryOperatorFactory(std::function<T(T)> functor, const std::string& repr)
     : m_functor{functor}, m_repr{repr} {}
 
-  std::shared_ptr<Node<T>> operator() (const std::shared_ptr<Node<T>>& node) const {
-    return std::make_shared<UnaryOperator<T>>(node, m_functor, m_repr);
+  std::shared_ptr<Node<R>> operator() (const std::shared_ptr<Node<T>>& node) const {
+    return std::make_shared<UnaryOperator<R, T>>(node, m_functor, m_repr);
   }
 
 private:
