@@ -33,11 +33,18 @@ public:
     : m_lval{lval}, m_rval{rval}, m_functor{functor}, m_repr{repr} {}
 
   std::string repr() const override {
-    return std::string("(") + m_lval->repr() + m_repr + m_rval->repr() + ")";
+    return m_repr;
   }
 
   R eval() const final {
     return m_functor(m_lval->eval(), m_rval->eval());
+  }
+
+  void visit(Visitor& visitor) const override {
+    visitor.enter(this);
+    m_lval->visit(visitor);
+    m_rval->visit(visitor);
+    visitor.exit(this);
   }
 
 private:

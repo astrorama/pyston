@@ -16,42 +16,36 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef PYSTON_PLACEHOLDER_H
-#define PYSTON_PLACEHOLDER_H
+#ifndef PYSTON_PRETTYPRINTER_H
+#define PYSTON_PRETTYPRINTER_H
 
-#include "Node.h"
+#include "AST/Node.h"
+#include <sstream>
 
 namespace Pyston {
 
-template<typename T>
-class Placeholder : public Node<T> {
+class PrettyPrinter: public Visitor {
 public:
-  Placeholder(const size_t id) : m_id{id} {
+  PrettyPrinter(): m_indent{0} {}
+
+  void enter(const NodeBase *node) override {
+    m_stream << std::string(m_indent, '\t') << node->repr() << std::endl;
+    ++m_indent;
   }
 
-  std::string repr() const override {
-    return "_" + std::to_string(m_id);
+  void exit(const NodeBase *) override {
+    --m_indent;
   }
 
-  T eval() const final {
-    return m_value;
-  }
-
-  Placeholder& operator = (T value) {
-    m_value = value;
-    return *this;
-  }
-
-  void visit(Visitor& visitor) const override {
-    visitor.enter(this);
-    visitor.exit(this);
+  std::string str() const {
+    return m_stream.str();
   }
 
 private:
-  size_t m_id;
-  T m_value;
+  unsigned m_indent;
+  std::stringstream m_stream;
 };
 
-} // end of namespace Pyston
+}
 
-#endif //PYSTON_PLACEHOLDER_H
+#endif //PYSTON_PRETTYPRINTER_H

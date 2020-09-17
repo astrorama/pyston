@@ -23,10 +23,10 @@
 
 namespace Pyston {
 
-template <typename T>
-class Constant: public Node<T> {
+template<typename T>
+class Constant : public Node<T> {
 public:
-  Constant(T value): m_value{value} {}
+  Constant(T value) : m_value{value} {}
 
   std::string repr() const override {
     return std::to_string(m_value);
@@ -34,6 +34,11 @@ public:
 
   T eval() const final {
     return m_value;
+  }
+
+  void visit(Visitor& visitor) const override {
+    visitor.enter(this);
+    visitor.exit(this);
   }
 
 private:

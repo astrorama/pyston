@@ -29,6 +29,7 @@
 #include "SEImplementation/PythonConfig/PythonInterpreter.h"
 #include "SEUtils/Python.h"
 #include "Pyston/AST/Placeholder.h"
+#include "Pyston/PrettyPrinter.h"
 
 using boost::program_options::options_description;
 using boost::program_options::variable_value;
@@ -73,8 +74,9 @@ public:
         py::object func = evaluate[nparams];
         py::object ast = func(*py::tuple(arguments));
         std::shared_ptr<Node<double>> node = py::extract<std::shared_ptr<Node<double>>>(ast);
-        logger.info() << '\t' << node->repr();
-        //logger.info() << node->eval(values);
+        PrettyPrinter printer;
+        node->visit(printer);
+        logger.info() << "\n" << printer.str();
 
         const int REPEATS = 1000;
 

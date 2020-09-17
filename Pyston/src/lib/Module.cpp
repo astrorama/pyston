@@ -111,7 +111,7 @@ struct RegisterNode {
                           typename std::enable_if<std::is_floating_point<Y>::value>::type * = nullptr) {
     node
       .def("__pow__", makeBinary<T, Pow>("^"))
-      .def("__rpow__", makeBinary<T, Pow>("^"))
+      .def("__rpow__", makeBinary<T, Pow>("^", true))
       .def("__round__", makeUnary<T, Round>("round"))
       .def("__abs__", makeUnary<T, Abs>("abs"));
 

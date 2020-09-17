@@ -34,11 +34,17 @@ public:
     : m_node{node}, m_functor{functor}, m_repr{repr} {}
 
   std::string repr() const override {
-    return std::string("(") + m_repr + m_node->repr() + ")";
+    return m_repr;
   }
 
   R eval() const final {
     return m_functor(m_node->eval());
+  }
+
+  void visit(Visitor& visitor) const override {
+    visitor.enter(this);
+    m_node->visit(visitor);
+    visitor.exit(this);
   }
 
 private:

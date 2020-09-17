@@ -25,14 +25,30 @@
 
 namespace Pyston {
 
-template<typename T>
-class Node {
+class Visitor;
+
+class NodeBase {
 public:
-  virtual ~Node() = default;
+  virtual ~NodeBase() = default;
 
   virtual std::string repr() const = 0;
 
+  virtual void visit(Visitor&) const = 0;
+};
+
+template<typename T>
+class Node: public NodeBase {
+public:
+  virtual ~Node() = default;
+
   virtual T eval() const = 0;
+};
+
+class Visitor {
+public:
+  virtual void enter(const NodeBase *) = 0;
+
+  virtual void exit(const NodeBase *) = 0;
 };
 
 } // end of namespace Pyston

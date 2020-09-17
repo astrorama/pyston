@@ -30,11 +30,17 @@ public:
   }
 
   std::string repr() const final {
-    return "Cast(" + m_node->repr() + ")";
+    return std::string("Cast ") + typeid(From).name() + " => " + typeid(To).name();
   }
 
   To eval() const final {
     return static_cast<To>(m_node->eval());
+  }
+
+  void visit(Visitor& visitor) const override {
+    visitor.enter(this);
+    m_node->visit(visitor);
+    visitor.exit(this);
   }
 
 private:
