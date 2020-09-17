@@ -9,14 +9,12 @@ def myfunc1(x):
 
 
 def myfunc2(x, y):
-    z = y
-    #if x > y:
-    #    z = x
-    return 5 * x + np.log(np.exp(1 - z) / 2)
+    z = y > 0.
+    return x + (y > 0)
 
 
 config.evaluate = dict()
-config.evaluate[0] = lambda: 5 + a // 10
-config.evaluate[1] = lambda x: myfunc1(x)
+config.evaluate[0] = lambda: 5
+config.evaluate[1] = lambda x: True + x
 config.evaluate[2] = lambda x, y: myfunc2(x, y)
 config.evaluate[3] = lambda x, y, z: z + y + x  # myfunc2(x, y)

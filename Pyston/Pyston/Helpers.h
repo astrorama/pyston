@@ -34,7 +34,7 @@ static boost::python::object makeUnary(const std::string& repr) {
   return boost::python::make_function(
     UnaryOperatorFactory<R, T>(Functor<T>(), repr),
     boost::python::default_call_policies(),
-    boost::mpl::vector<std::shared_ptr<Node<T>>, const std::shared_ptr<Node<T>>&>()
+    boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&>()
   );
 }
 
