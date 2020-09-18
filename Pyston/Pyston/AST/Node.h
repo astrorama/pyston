@@ -19,9 +19,11 @@
 #ifndef PYSTON_NODE_H
 #define PYSTON_NODE_H
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/variant.hpp>
 
 namespace Pyston {
 
@@ -36,12 +38,15 @@ public:
   virtual void visit(Visitor&) const = 0;
 };
 
+using Value = boost::variant<bool, int64_t, double>;
+using Arguments = std::map<std::string, Value>;
+
 template<typename T>
-class Node: public NodeBase {
+class Node : public NodeBase {
 public:
   virtual ~Node() = default;
 
-  virtual T eval() const = 0;
+  virtual T eval(const Arguments&) const = 0;
 };
 
 class Visitor {

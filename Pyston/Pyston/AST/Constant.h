@@ -28,15 +28,15 @@ class Constant : public Node<T> {
 public:
   Constant(T value) : m_value{value} {}
 
-  std::string repr() const override {
+  std::string repr() const final {
     return std::to_string(m_value);
   }
 
-  T eval() const final {
+  T eval(const Arguments&) const final {
     return m_value;
   }
 
-  void visit(Visitor& visitor) const override {
+  void visit(Visitor& visitor) const final {
     visitor.enter(this);
     visitor.exit(this);
   }

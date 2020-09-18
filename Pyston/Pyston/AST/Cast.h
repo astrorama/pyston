@@ -33,11 +33,11 @@ public:
     return std::string("Cast ") + typeid(From).name() + " => " + typeid(To).name();
   }
 
-  To eval() const final {
-    return static_cast<To>(m_node->eval());
+  To eval(const Arguments &args) const final {
+    return static_cast<To>(m_node->eval(args));
   }
 
-  void visit(Visitor& visitor) const override {
+  void visit(Visitor& visitor) const final {
     visitor.enter(this);
     m_node->visit(visitor);
     visitor.exit(this);

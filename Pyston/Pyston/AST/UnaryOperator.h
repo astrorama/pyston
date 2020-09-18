@@ -30,18 +30,19 @@ namespace Pyston {
 template<typename R, typename T>
 class UnaryOperator : public Node<R> {
 public:
-  UnaryOperator(const std::shared_ptr<Node<T>>& node, std::function<T(T)> functor, const std::string&repr)
+  UnaryOperator(const std::shared_ptr<Node<T>>& node, std::function<T(T)> functor,
+                const std::string& repr)
     : m_node{node}, m_functor{functor}, m_repr{repr} {}
 
-  std::string repr() const override {
+  std::string repr() const final {
     return m_repr;
   }
 
-  R eval() const final {
-    return m_functor(m_node->eval());
+  R eval(const Arguments& args) const final {
+    return m_functor(m_node->eval(args));
   }
 
-  void visit(Visitor& visitor) const override {
+  void visit(Visitor& visitor) const final {
     visitor.enter(this);
     m_node->visit(visitor);
     visitor.exit(this);

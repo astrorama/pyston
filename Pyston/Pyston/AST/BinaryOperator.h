@@ -32,15 +32,15 @@ public:
                  std::function<R(T, T)> functor, const std::string& repr)
     : m_lval{lval}, m_rval{rval}, m_functor{functor}, m_repr{repr} {}
 
-  std::string repr() const override {
+  std::string repr() const final {
     return m_repr;
   }
 
-  R eval() const final {
-    return m_functor(m_lval->eval(), m_rval->eval());
+  R eval(const Arguments& args) const final {
+    return m_functor(m_lval->eval(args), m_rval->eval(args));
   }
 
-  void visit(Visitor& visitor) const override {
+  void visit(Visitor& visitor) const final {
     visitor.enter(this);
     m_lval->visit(visitor);
     m_rval->visit(visitor);

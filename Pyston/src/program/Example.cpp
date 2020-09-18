@@ -61,18 +61,21 @@ public:
 
       try {
         py::object pyston = py::import("libPyston");
-        py::list arguments;
+        py::list placeholders;
+        Arguments args;
         std::vector<double> values;
 
         for (size_t arg = 0; arg < nparams; ++arg) {
-          auto placeholder = std::make_shared<Placeholder<double>>(arg);
-          arguments.append(placeholder);
-          values.emplace_back(::drand48());
-          *placeholder = values.back();
+          std::string var_name(1, 'a' + arg);
+          auto placeholder = std::make_shared<Placeholder<double>>(var_name);
+          placeholders.append(placeholder);
+          double val = ::drand48();
+          args.emplace(var_name, val);
+          values.push_back(val);
         }
 
         py::object func = evaluate[nparams];
-        py::object ast = func(*py::tuple(arguments));
+        py::object ast = func(*py::tuple(placeholders));
         std::shared_ptr<Node<double>> node = py::extract<std::shared_ptr<Node<double>>>(ast);
         GraphvizGenerator printer(std::to_string(nparams));
         node->visit(printer);
@@ -93,7 +96,7 @@ public:
         logger.info() << "Timing AST call, " << REPEATS << " times";
         timer.start();
         for (int j = 0; j < REPEATS; j++) {
-          node->eval();
+          node->eval(args);
         }
         timer.stop();
         logger.info() << '\t' << timer.elapsed().wall / float(REPEATS) << " ns / call";

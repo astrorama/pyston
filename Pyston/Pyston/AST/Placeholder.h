@@ -26,30 +26,25 @@ namespace Pyston {
 template<typename T>
 class Placeholder : public Node<T> {
 public:
-  Placeholder(const size_t id) : m_id{id} {
+
+  Placeholder(const std::string& name) : m_name{name} {
   }
 
-  std::string repr() const override {
-    return "_" + std::to_string(m_id);
+  std::string repr() const final {
+    return m_name;
   }
 
-  T eval() const final {
-    return m_value;
+  T eval(const Arguments& args) const final {
+    return boost::get<T>(args.at(m_name));
   }
 
-  Placeholder& operator = (T value) {
-    m_value = value;
-    return *this;
-  }
-
-  void visit(Visitor& visitor) const override {
+  void visit(Visitor& visitor) const final {
     visitor.enter(this);
     visitor.exit(this);
   }
 
 private:
-  size_t m_id;
-  T m_value;
+  std::string m_name;
 };
 
 } // end of namespace Pyston
