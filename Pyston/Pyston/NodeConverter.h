@@ -31,7 +31,7 @@ namespace Pyston {
  * @tparam T
  *  Node type *into* which types can be converted
  */
-template <typename T>
+template<typename T>
 struct NodeConverter {
   /**
    * Check if the python object can be converted to a known type
@@ -45,6 +45,7 @@ struct NodeConverter {
     using boost::python::object;
     using boost::python::borrowed;
     using boost::python::extract;
+    using boost::python::converter::registry::query;
 
     // Primitive numeric types are ok
     if (PyFloat_Check(obj_ptr) || PyLong_Check(obj_ptr) || PyBool_Check(obj_ptr))
@@ -53,12 +54,14 @@ struct NodeConverter {
     // Try other Node types
     object object(handle<>(borrowed(obj_ptr)));
 
-    extract<Node<bool>> bool_extract(object);
-    extract<Node<double>> double_extract(object);
-    extract<Node<int64_t>> int_extract(object);
+    auto bool_class = reinterpret_cast<PyObject*>(query(typeid(Node<bool>))->get_class_object());
+    auto double_class = reinterpret_cast<PyObject*>(query(typeid(Node<double>))->get_class_object());
+    auto int_class = reinterpret_cast<PyObject*>(query(typeid(Node<int64_t>))->get_class_object());
 
-    if (bool_extract.check() || double_extract.check() || int_extract.check())
+    if (PyObject_IsInstance(obj_ptr, bool_class) || PyObject_IsInstance(obj_ptr, double_class) ||
+        PyObject_IsInstance(obj_ptr, int_class)) {
       return obj_ptr;
+    }
 
     // No idea
     return nullptr;
@@ -104,11 +107,13 @@ struct NodeConverter {
   template<typename From>
   static bool createCastNode(boost::python::object& object, void *storage) {
     using boost::python::extract;
+    using boost::python::converter::registry::query;
 
-    extract<std::shared_ptr<Node<From>>> extractor(object);
-    if (!extractor.check())
+    auto py_class = reinterpret_cast<PyObject*>(query(typeid(Node<From>))->get_class_object());
+    if (!PyObject_IsInstance(object.ptr(), py_class))
       return false;
 
+    extract<std::shared_ptr<Node<From>>> extractor(object);
     new(storage)std::shared_ptr<Node<T>>(new Cast<T, From>(extractor));
 
     return true;
@@ -138,7 +143,8 @@ struct NodeConverter {
    * @param data
    *    boost python data required to construct the new object
    */
-  static void construct(PyObject *obj_ptr, boost::python::converter::rvalue_from_python_stage1_data *data) {
+  static void
+  construct(PyObject *obj_ptr, boost::python::converter::rvalue_from_python_stage1_data *data) {
     // Memory area where to store the new type
     void *storage = ((boost::python::converter::rvalue_from_python_storage<std::shared_ptr<Node<T>>> *) data)->storage.bytes;
 
