@@ -16,19 +16,37 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef PYSTON_MODULE_H
-#define PYSTON_MODULE_H
+#ifndef PYSTON_PYTHONFIXTURE_H
+#define PYSTON_PYTHONFIXTURE_H
 
-#include "Python.h"
+#include "Pyston/Module.h"
 
-extern "C" {
-  /**
-   * Method used by Python to import this library. It can be used directly when
-   * embedding via:
-   *    PyImport_AppendInittab("pyston", &PyInit_libPyston)
-   * This *must* be done before calling Py_Initialize
-   */
-  PyObject *PyInit_libPyston(void);
-}
+namespace Pyston {
 
-#endif //PYSTON_MODULE_H
+struct PythonFixture {
+
+  struct Singleton {
+    Singleton() {
+      if (PyImport_AppendInittab("pyston", &PyInit_libPyston) == -1)
+        abort();
+      Py_Initialize();
+    }
+  };
+
+  boost::python::object main_namespace;
+
+  PythonFixture() {
+    static Singleton singleton;
+    auto main_module = boost::python::import("__main__");
+    main_namespace = main_module.attr("__dict__");
+    boost::python::import("pyston");
+    main_namespace["np"] = boost::python::import("numpy");
+  }
+
+  ~PythonFixture() {
+  }
+};
+
+} // end of namespace Pyston
+
+#endif //PYSTON_PYTHONFIXTURE_H
