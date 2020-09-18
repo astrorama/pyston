@@ -14,7 +14,7 @@ def myfunc2(x, y):
 
 
 config.evaluate = dict()
-config.evaluate[0] = lambda: 5
-config.evaluate[1] = lambda x: True + x
+#config.evaluate[0] = lambda: 5
+#config.evaluate[1] = lambda x: True + x
 config.evaluate[2] = lambda x, y: myfunc2(x, y)
-config.evaluate[3] = lambda x, y, z: z + y + x  # myfunc2(x, y)
+#config.evaluate[3] = lambda x, y, z: z + y + x  # myfunc2(x, y)
