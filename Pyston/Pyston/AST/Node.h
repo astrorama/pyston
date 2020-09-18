@@ -27,32 +27,111 @@
 
 namespace Pyston {
 
+// Forward declaration
 class Visitor;
 
+/**
+ * To make the visitor independent of the primitive type wrapped by a Node, all instances
+ * of the templated class inherit from this one, which declares the API required by the visitor
+ */
 class NodeBase {
 public:
+  /**
+   * Constructor
+   * @param type_info
+   *    Type info of the inheriting Node T
+   */
+  explicit NodeBase(const std::type_info& type_info) : m_type_info{type_info} {}
+
+  /**
+   * Destructor
+   */
   virtual ~NodeBase() = default;
 
+  /**
+   * @return
+   *    A human readable representation of the node
+   * @note
+   *    It should *not* include the representation of the children, if any.
+   *    That's what visitors are for.
+   */
   virtual std::string repr() const = 0;
 
+  /**
+   * Entry point for the visitor
+   */
   virtual void visit(Visitor&) const = 0;
+
+  /**
+   * @return
+   *    The type information of the inheriting Node
+   */
+  const std::type_info& type() const {
+    return m_type_info;
+  }
+
+private:
+  const std::type_info& m_type_info;
 };
 
+/**
+ * Can hold any values a Placeholder may require
+ */
 using Value = boost::variant<bool, int64_t, double>;
+
+/**
+ * A dictionary where the key corresponds to the name placeholders have,
+ * and the Value they are assigned.
+ */
 using Arguments = std::map<std::string, Value>;
 
+/**
+ * A node on the computing tree, which has an associated primitive type
+ */
 template<typename T>
 class Node : public NodeBase {
 public:
+  /**
+   * Constructor
+   */
+  Node() : NodeBase(typeid(T)) {}
+
+  /**
+   * Destructor
+   */
   virtual ~Node() = default;
 
+  /**
+   * Evaluate the computing tree
+   * @details
+   *    In principle one could avoid to pass any values here, and assign directly the
+   *    final value to the placeholders that were used to create this tree. However, this
+   *    would cause the placeholders not to be thread-safe, and a tree would have to be either
+   *    cloned, either protected by a mutex.
+   *    Passing the values as an argument allows making the full tree immutable once built,
+   *    and fully thread safe.
+   * @return
+   *    Result of the evaluation
+   */
   virtual T eval(const Arguments&) const = 0;
 };
 
+/**
+ * Base class for visitors of a computing tree.
+ * @details
+ *  Leaf nodes will call enter and, immediately after, exit.
+ *  For binary operators, the left side is visited first
+ */
 class Visitor {
 public:
+  /**
+   * Called when a node is entered
+   */
   virtual void enter(const NodeBase *) = 0;
 
+  /**
+   * Called when a node is left
+   */
   virtual void exit(const NodeBase *) = 0;
 };
 

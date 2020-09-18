@@ -27,6 +27,23 @@
 
 namespace Pyston {
 
+/**
+ * @details
+ *  boost::python seems to have some trouble attaching functors as methods
+ *  to python objects, so it requires some massaging in order to figure out the signature,
+ *  keep the reference alive, etc.
+ *  Since the code is a bit convolved, we isolate it here to make it easier to use
+ * @tparam T
+ *  Type corresponding to the Node to which we are adding the method
+ * @tparam Functor
+ *  A functor that receives a single parameter of the type the Node represents.
+ *  This method infers the return type automatically, so it can be used to insert unary
+ *  operators that return a type different to the one it receives
+ * @param repr
+ *  Literal representation of the node, for pretty-printing
+ * @return
+ *  A callable python object
+ */
 template<typename T, template<class> class Functor>
 static boost::python::object makeUnary(const std::string& repr) {
   typedef decltype(std::declval<Functor<T>>()(T())) R;
@@ -38,6 +55,20 @@ static boost::python::object makeUnary(const std::string& repr) {
   );
 }
 
+/**
+ * @copydetails makeUnary
+ * @tparam T
+ *  Type corresponding to the Node to which we are adding the method
+ * @tparam Functor
+ *  A functor that receives two parameters of the type the Node represents.
+ *  This method infers the return type automatically, so it can be used to insert binary
+ *  operators that return a type different to the one it receives (i.e. greater-than
+ *  receives two floats and return one boolean)
+ * @param repr
+ *  Literal representation of the node, for pretty-printing
+ * @return
+ *  A callable python object
+ */
 template<typename T, template<class> class Functor>
 static boost::python::object makeBinary(const std::string& repr, bool reverse = false) {
   typedef decltype(std::declval<Functor<T>>()(T(), T())) R;

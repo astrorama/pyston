@@ -23,21 +23,45 @@
 
 namespace Pyston {
 
+/**
+ * Placeholder node, pretty much like a variable.
+ * @tparam T
+ *  Type of the placeholder
+ */
 template<typename T>
 class Placeholder : public Node<T> {
 public:
 
-  Placeholder(const std::string& name) : m_name{name} {
+  /**
+   * Constructor
+   * @param name
+   *    Name of the Placeholder. It will be used to retrieve later the value assigned to it.
+   */
+  explicit Placeholder(const std::string& name) : m_name{name} {
   }
 
+  /**
+   * @copydoc Node::repr
+   */
   std::string repr() const final {
     return m_name;
   }
 
+  /**
+   * @copydoc Node::eval
+   * @throw std::out_of_range
+   *    There is no value assigned to this placeholder
+   * @throw boost::bad_get
+   *    The type of the value assigned to the placeholder does not correspond to the
+   *    expected type T
+   */
   T eval(const Arguments& args) const final {
     return boost::get<T>(args.at(m_name));
   }
 
+  /**
+   * @copydoc Node::visit
+   */
   void visit(Visitor& visitor) const final {
     visitor.enter(this);
     visitor.exit(this);

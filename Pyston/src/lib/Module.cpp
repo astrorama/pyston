@@ -20,6 +20,7 @@
 #include "Pyston/ExceptionRaiser.h"
 #include "Pyston/Functors.h"
 #include "Pyston/Helpers.h"
+#include "Pyston/NodeConverter.h"
 #include "Pyston/AST/Cast.h"
 #include "Pyston/AST/Constant.h"
 #include "Pyston/AST/Placeholder.h"
@@ -34,76 +35,6 @@ using boost::core::demangle;
 namespace py = boost::python;
 
 namespace Pyston {
-
-template<typename T>
-struct NodeConverter {
-  static void *isConvertible(PyObject *obj_ptr) {
-    // Primitive numeric types are ok
-    if (PyFloat_Check(obj_ptr) || PyLong_Check(obj_ptr) || PyBool_Check(obj_ptr))
-      return obj_ptr;
-
-    // Try other Node types
-    py::handle<PyObject> handle(py::borrowed(obj_ptr));
-    py::object object(handle);
-
-    py::extract<Node<bool>> bool_extract(object);
-    //py::extract<Node<double>> double_extract(object);
-    //py::extract<Node<int64_t>> int_extract(object);
-
-    if (bool_extract.check())
-      return obj_ptr;
-
-    // No idea
-    return nullptr;
-  }
-
-  static bool
-  fromPrimitive(PyObject *obj_ptr, void *storage) {
-    if (!PyFloat_Check(obj_ptr) && !PyLong_Check(obj_ptr) && !PyBool_Check(obj_ptr))
-      return false;
-
-    T value = 0;
-    if (PyFloat_Check(obj_ptr))
-      value = PyFloat_AsDouble(obj_ptr);
-    else if (PyLong_Check(obj_ptr))
-      value = PyLong_AsLong(obj_ptr);
-    else if (PyBool_Check(obj_ptr))
-      value = (obj_ptr == Py_True);
-
-    new(storage) std::shared_ptr<Node<T>>(new Constant<T>(value));
-    return true;
-  }
-
-  template<typename From>
-  static bool createCastNode(py::object& object, void *storage) {
-    py::extract<std::shared_ptr<Node<From>>> extractor(object);
-    if (!extractor.check())
-      return false;
-
-    new(storage)std::shared_ptr<Node<T>>(new Cast<T, From>(extractor));
-
-    return true;
-  }
-
-  static bool castNode(PyObject *obj_ptr, void *storage) {
-    py::handle<> handle(py::borrowed(obj_ptr));
-    py::object object(handle);
-
-    return createCastNode<bool>(object, storage) ||
-      createCastNode<int64_t>(object, storage) ||
-      createCastNode<double>(object, storage);
-  }
-
-  static void construct(PyObject *obj_ptr, py::converter::rvalue_from_python_stage1_data *data) {
-    void *storage = ((py::converter::rvalue_from_python_storage<std::shared_ptr<Node<T>>> *) data)->storage.bytes;
-
-    // Abort if can not convert, because isConvertible hasn't done its job
-    if (!fromPrimitive(obj_ptr, storage) && !castNode(obj_ptr, storage))
-      abort();
-
-    data->convertible = storage;
-  }
-};
 
 
 template<typename T>

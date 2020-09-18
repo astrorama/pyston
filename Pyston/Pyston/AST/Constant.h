@@ -23,19 +23,40 @@
 
 namespace Pyston {
 
+/**
+ * Node that just wraps a constant
+ * @tparam T
+ *  The type of the constant
+ */
 template<typename T>
 class Constant : public Node<T> {
 public:
-  Constant(T value) : m_value{value} {}
+  /**
+   * Constructor
+   * @param value
+   *    Wrapped value
+   */
+  explicit Constant(T value) : m_value{value} {}
 
+  /**
+   * @copydoc Node::repr
+   */
   std::string repr() const final {
     return std::to_string(m_value);
   }
 
+  /**
+   * @copydoc Node::eval
+   * @note
+   *    Obviously this node does nothing with the arguments
+   */
   T eval(const Arguments&) const final {
     return m_value;
   }
 
+  /**
+   * @copydoc Node::visit
+   */
   void visit(Visitor& visitor) const final {
     visitor.enter(this);
     visitor.exit(this);

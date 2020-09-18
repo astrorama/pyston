@@ -19,19 +19,31 @@
 #ifndef PYSTON_GRAPHVIZGENERATOR_H
 #define PYSTON_GRAPHVIZGENERATOR_H
 
-#include "AST/Node.h"
+#include "Pyston/AST/Node.h"
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 
 namespace Pyston {
 
+/**
+ * Concrete implementation of the Visitor class for the computing trees.
+ * It will generate a string representing the graph in a format compatible with graphviz.
+ */
 class GraphvizGenerator : public Visitor {
 public:
+  /**
+   * Constructor
+   * @param label
+   *    Name of the whole graph
+   */
   GraphvizGenerator(const std::string& label) {
     m_stream << "digraph G {" << std::endl
              << "\tlabel=\"" << escape(label) << "\"" << std::endl;
   }
 
+  /**
+   * @copydoc Visitor::enter
+   */
   void enter(const NodeBase *node) override {
     m_stream << "\t" << '"' << node << '"'
              << " [label=\"" << escape(node->repr()) << "\"];"
@@ -42,10 +54,17 @@ public:
     m_stack.push_back(node);
   }
 
+  /**
+   * @copydoc Visitor::exit
+   */
   void exit(const NodeBase *) override {
     m_stack.pop_back();
   }
 
+  /**
+   * @return
+   *    The graphviz representation of the visited graph
+   */
   std::string str() const {
     return m_stream.str() + "}";
   }

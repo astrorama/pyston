@@ -30,22 +30,44 @@ using boost::core::demangle;
 
 namespace Pyston {
 
+/**
+ * Node type that casts one type of value into another.
+ * This is required so we can, for instance, add a boolean to a float.
+ * @tparam To
+ *  Cast type
+ * @tparam From
+ *  Casted type
+ */
 template<typename To, typename From>
 class Cast: public Node<To> {
 public:
+  /**
+   * Constructor
+   * @param node
+   *    Wrapped node, for which its eval result will be casted to To
+   */
   explicit Cast(const std::shared_ptr<Node<From>> &node): m_node{node} {
   }
 
+  /**
+   * @copydoc Node::repr
+   */
   std::string repr() const final {
     return std::string("Cast ") + demangle(typeid(From).name())
            + " => " +
            demangle(typeid(To).name());
   }
 
+  /**
+   * @copydoc Node::eval
+   */
   To eval(const Arguments &args) const final {
     return static_cast<To>(m_node->eval(args));
   }
 
+  /**
+   * @copydoc Node::visit
+   */
   void visit(Visitor& visitor) const final {
     visitor.enter(this);
     m_node->visit(visitor);

@@ -26,13 +26,29 @@
 
 namespace Pyston {
 
+/**
+ * Convenience functor that just raises a Python error whenever called.
+ * It can be used to attach methods that can only fail to Python objects.
+ * @tparam T
+ *  Node type
+ */
 template<typename T>
 class ExceptionRaiser {
 public:
+  /**
+   * Constructor
+   * @param msg
+   *    Message for the exception
+   */
   ExceptionRaiser(const std::string& msg) : m_msg{msg} {}
 
+  /**
+   * Callable
+   * @throws boost::python::error_already_set
+   *    Always. It will set previously a RuntimeError with the given message.
+   */
   void operator()(const std::shared_ptr<Node<T>>&) {
-    PyErr_SetString(PyExc_TypeError, m_msg.c_str());
+    PyErr_SetString(PyExc_RuntimeError, m_msg.c_str());
     throw boost::python::error_already_set();
   }
 

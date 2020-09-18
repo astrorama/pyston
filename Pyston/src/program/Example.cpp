@@ -30,7 +30,7 @@
 #include "SEImplementation/PythonConfig/PythonInterpreter.h"
 #include "SEUtils/Python.h"
 #include "Pyston/AST/Placeholder.h"
-#include "Pyston/GraphvizGenerator.h"
+#include "Pyston/Util/GraphvizGenerator.h"
 
 using namespace Pyston;
 namespace po = boost::program_options;
