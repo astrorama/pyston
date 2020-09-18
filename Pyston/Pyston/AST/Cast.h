@@ -21,6 +21,13 @@
 
 #include "Node.h"
 
+#if BOOST_VERSION < 105600
+#include <boost/units/detail/utility.hpp>
+using boost::units::detail::demangle;
+#else
+using boost::core::demangle;
+#endif
+
 namespace Pyston {
 
 template<typename To, typename From>
@@ -30,7 +37,9 @@ public:
   }
 
   std::string repr() const final {
-    return std::string("Cast ") + typeid(From).name() + " => " + typeid(To).name();
+    return std::string("Cast ") + demangle(typeid(From).name())
+           + " => " +
+           demangle(typeid(To).name());
   }
 
   To eval(const Arguments &args) const final {

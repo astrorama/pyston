@@ -24,6 +24,12 @@
 #include "Pyston/AST/Constant.h"
 #include "Pyston/AST/Placeholder.h"
 
+#if BOOST_VERSION < 105600
+#include <boost/units/detail/utility.hpp>
+using boost::units::detail::demangle;
+#else
+using boost::core::demangle;
+#endif
 
 namespace py = boost::python;
 
@@ -185,7 +191,7 @@ struct RegisterNode {
   }
 
   static void Do() {
-    auto node_name = std::string("Node<") + typeid(T).name() + ">";
+    auto node_name = std::string("Node<") + demangle(typeid(T).name()) + ">";
     py::class_<Node<T>, boost::noncopyable> node(node_name.c_str(), "AST Node", py::no_init);
 
     // Operators and method applicable to all types
@@ -204,7 +210,7 @@ struct RegisterNode {
                                        py::type_id<std::shared_ptr<Node<T>>>());
 
     // Triggers the building of a tree
-    auto placeholder_name = std::string("Placeholder<") + typeid(T).name() + ">";
+    auto placeholder_name = std::string("Placeholder<") + demangle(typeid(T).name()) + ">";
     py::class_<Placeholder<T>, py::bases<Node<T>>>(
       placeholder_name.c_str(), "Variable placeholder", py::no_init);
     py::register_ptr_to_python<std::shared_ptr<Placeholder<T>>>();
