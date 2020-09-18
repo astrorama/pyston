@@ -36,7 +36,7 @@ public:
    * @param label
    *    Name of the whole graph
    */
-  GraphvizGenerator(const std::string& label) {
+  GraphvizGenerator(const std::string& label): m_unique_id{0} {
     m_stream << "digraph G {" << std::endl
              << "\tlabel=\"" << escape(label) << "\"" << std::endl;
   }
@@ -45,13 +45,14 @@ public:
    * @copydoc Visitor::enter
    */
   void enter(const NodeBase *node) override {
-    m_stream << "\t" << '"' << node << '"'
+    m_stream << "\t" << '"' << m_unique_id << '"'
              << " [label=\"" << escape(node->repr()) << "\"];"
              << std::endl;
     if (!m_stack.empty()) {
-      m_stream << "\t\"" << m_stack.back() << '"' << " -> \"" << node << "\"" << std::endl;
+      m_stream << "\t\"" << m_stack.back() << '"' << " -> \"" << m_unique_id << "\"" << std::endl;
     }
-    m_stack.push_back(node);
+    m_stack.push_back(m_unique_id);
+    ++m_unique_id;
   }
 
   /**
@@ -70,8 +71,9 @@ public:
   }
 
 private:
+  int64_t m_unique_id;
   std::stringstream m_stream;
-  std::list<const NodeBase *> m_stack;
+  std::list<int64_t> m_stack;
 
   static std::string escape(const std::string& str) {
     return boost::replace_all_copy(str, "\"", "\\\"");
