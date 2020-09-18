@@ -29,7 +29,7 @@
 #include "SEImplementation/PythonConfig/PythonInterpreter.h"
 #include "SEUtils/Python.h"
 #include "Pyston/AST/Placeholder.h"
-#include "Pyston/PrettyPrinter.h"
+#include "Pyston/GraphvizGenerator.h"
 
 using boost::program_options::options_description;
 using boost::program_options::variable_value;
@@ -74,9 +74,9 @@ public:
         py::object func = evaluate[nparams];
         py::object ast = func(*py::tuple(arguments));
         std::shared_ptr<Node<double>> node = py::extract<std::shared_ptr<Node<double>>>(ast);
-        PrettyPrinter printer;
+        GraphvizGenerator printer(std::to_string(nparams));
         node->visit(printer);
-        logger.info() << "\n" << printer.str();
+        std::cout << printer.str() << std::endl;
 
         const int REPEATS = 1000;
 
