@@ -9,7 +9,7 @@ def myfunc1(x):
 
 
 def myfunc2(x, y):
-    z = y > 0.
+    z = 5 + (y > 0.)
     return x + y * z**np.log(x)
 
 

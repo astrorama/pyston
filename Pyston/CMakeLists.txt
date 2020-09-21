@@ -71,6 +71,9 @@ elements_add_executable(Example src/program/Example.cpp
 elements_add_unit_test(BinaryOperatorTest tests/src/BinaryOperator_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)
+elements_add_unit_test(CastTest tests/src/Cast_test.cpp
+        LINK_LIBRARIES Pyston
+        TYPE Boost)
 elements_add_unit_test(ConstantTest tests/src/Constant_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)

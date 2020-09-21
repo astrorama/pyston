@@ -40,15 +40,39 @@ namespace Pyston {
 template<typename T>
 struct RegisterNode {
 
+  /**
+   * Define operations where the other value has a different type (To)
+   * i.e. if __add__ is called on a boolean, and the other value (To) is a float,
+   * self has to be upcasted
+   */
+  template<typename To>
+  static void defCastOperations(py::class_<Node<T>, boost::noncopyable>& node) {
+    node
+      .def("__add__", makeBinary<T, To, std::plus>("+"))
+      .def("__sub__", makeBinary<T, To, std::minus>("-"))
+      .def("__mul__", makeBinary<T, To, std::multiplies>("*"))
+      .def("__truediv__", makeBinary<T, To, std::divides>("/"))
+      .def("__radd__", makeBinary<T, To, std::plus>("+", true))
+      .def("__rsub__", makeBinary<T, To, std::minus>("-", true))
+      .def("__rmul__", makeBinary<T, To, std::multiplies>("*", true))
+      .def("__rtruediv__", makeBinary<T, To, std::divides>("/", true));
+  }
+
+  /**
+   * Methods for specific types
+   */
   template<typename Y>
   static void specialized(py::class_<Node<Y>, boost::noncopyable>& node, void *);
 
+  /**
+   * Methods for floating point types
+   */
   template<typename Y>
   static void specialized(py::class_<Node<Y>, boost::noncopyable>& node,
                           typename std::enable_if<std::is_floating_point<Y>::value>::type * = nullptr) {
     node
-      .def("__pow__", makeBinary<T, Pow>("^"))
-      .def("__rpow__", makeBinary<T, Pow>("^", true))
+      .def("__pow__", makeBinary<T, T, Pow>("^"))
+      .def("__rpow__", makeBinary<T, T, Pow>("^", true))
       .def("__round__", makeUnary<T, Round>("round"))
       .def("__abs__", makeUnary<T, Abs>("abs"));
 
@@ -77,39 +101,52 @@ struct RegisterNode {
       .def("arctanh", makeUnary<T, ArcTanh>("arctanh"));
   }
 
+  /**
+   * Methods for the boolean type
+   */
   template<typename Y>
-  static void specialized(py::class_<Node<Y>, boost::noncopyable>&,
+  static void specialized(py::class_<Node<Y>, boost::noncopyable>& node,
                           typename std::enable_if<std::is_same<Y, bool>::value>::type * = nullptr) {
+    // Upcast to double and int
+    defCastOperations<double>(node);
+    defCastOperations<int64_t>(node);
   }
 
+  /**
+   * Methods for integral types, except bool
+   */
   template<typename Y>
   static void specialized(py::class_<Node<Y>, boost::noncopyable>& node,
                           typename std::enable_if<std::is_integral<Y>::value &&
                                                   !std::is_same<Y, bool>::value>::type * = nullptr) {
     node
       .def("__abs__", makeUnary<T, Abs>("abs"));
+    // Upcast to double
+    defCastOperations<double>(node);
   }
 
   static void general(py::class_<Node<T>, boost::noncopyable>& node) {
     // https://docs.python.org/3/reference/datamodel.html#basic-customization
+    // Same types
     node
-      .def("__lt__", makeBinary<T, std::less>("<"))
-      .def("__le__", makeBinary<T, std::less_equal>("<="))
-      .def("__eq__", makeBinary<T, std::equal_to>("=="))
-      .def("__ne__", makeBinary<T, std::not_equal_to>("!="))
-      .def("__gt__", makeBinary<T, std::greater>(">"))
-      .def("__ge__", makeBinary<T, std::greater_equal>(">="));
+      .def("__lt__", makeBinary<T, T, std::less>("<"))
+      .def("__le__", makeBinary<T, T, std::less_equal>("<="))
+      .def("__eq__", makeBinary<T, T, std::equal_to>("=="))
+      .def("__ne__", makeBinary<T, T, std::not_equal_to>("!="))
+      .def("__gt__", makeBinary<T, T, std::greater>(">"))
+      .def("__ge__", makeBinary<T, T, std::greater_equal>(">="));
 
     // https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types
+    // Same types
     node
-      .def("__add__", makeBinary<T, std::plus>("+"))
-      .def("__sub__", makeBinary<T, std::minus>("-"))
-      .def("__mul__", makeBinary<T, std::multiplies>("*"))
-      .def("__truediv__", makeBinary<T, std::divides>("/"))
-      .def("__radd__", makeBinary<T, std::plus>("+", true))
-      .def("__rsub__", makeBinary<T, std::minus>("-", true))
-      .def("__rmul__", makeBinary<T, std::multiplies>("*", true))
-      .def("__rtruediv__", makeBinary<T, std::divides>("/", true))
+      .def("__add__", makeBinary<T, T, std::plus>("+"))
+      .def("__sub__", makeBinary<T, T, std::minus>("-"))
+      .def("__mul__", makeBinary<T, T, std::multiplies>("*"))
+      .def("__truediv__", makeBinary<T, T, std::divides>("/"))
+      .def("__radd__", makeBinary<T, T, std::plus>("+", true))
+      .def("__rsub__", makeBinary<T, T, std::minus>("-", true))
+      .def("__rmul__", makeBinary<T, T, std::multiplies>("*", true))
+      .def("__rtruediv__", makeBinary<T, T, std::divides>("/", true))
       .def("__neg__", makeUnary<T, std::negate>("-"))
       .def("__pos__", makeUnary<T, Identity>("+"));
 

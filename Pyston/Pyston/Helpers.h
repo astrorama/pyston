@@ -24,6 +24,7 @@
 #include "AST/Node.h"
 #include "Pyston/AST/BinaryOperator.h"
 #include "Pyston/AST/UnaryOperator.h"
+#include "Pyston/AST/Cast.h"
 
 namespace Pyston {
 
@@ -57,8 +58,10 @@ static boost::python::object makeUnary(const std::string& repr) {
 
 /**
  * @copydetails makeUnary
- * @tparam T
- *  Type corresponding to the Node to which we are adding the method
+ * @tparam TL
+ *  Type of the left value
+ * @tparam TR
+ *  Type of the right value
  * @tparam Functor
  *  A functor that receives two parameters of the type the Node represents.
  *  This method infers the return type automatically, so it can be used to insert binary
@@ -68,17 +71,47 @@ static boost::python::object makeUnary(const std::string& repr) {
  *  Literal representation of the node, for pretty-printing
  * @return
  *  A callable python object
+ * @note
+ *  This implements the operation when both sides have the same type
  */
-template<typename T, template<class> class Functor>
-static boost::python::object makeBinary(const std::string& repr, bool reverse = false) {
+template<typename TL, typename TR, template<class> class Functor>
+static auto makeBinary(const std::string& repr,
+                       bool reverse = false) -> typename std::enable_if<std::is_same<TL, TR>::value, boost::python::object>::type {
+  using T = TR;
   typedef decltype(std::declval<Functor<T>>()(T(), T())) R;
 
   return boost::python::make_function(
-    BinaryOperatorFactory<R, T>(Functor<T>(), repr, reverse),
+    BinaryOperatorFactory<R, TL>(Functor<T>(), repr, reverse),
     boost::python::default_call_policies(),
-    boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&, const std::shared_ptr<Node<T>>&>()
+    boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<TL>>&, const std::shared_ptr<Node<TR>>&>()
   );
 }
+
+/**
+ * @copydoc makeBinary
+ * @note
+ *  This implements the operation when a cast operation is required:
+ *  the *left* value will be casted to the *right* type (TR)
+ */
+template<typename TL, typename TR, template<class> class Functor>
+static auto makeBinary(const std::string& repr,
+                       bool reverse = false) -> typename std::enable_if<!std::is_same<TL, TR>::value, boost::python::object>::type {
+  typedef decltype(std::declval<Functor<TR>>()(TR(), TR())) R;
+
+  // Operator itself
+  BinaryOperatorFactory<R, TR> op(Functor<TR>(), repr, reverse);
+
+  // Wrap on a lambda that casts TL into TR
+  return boost::python::make_function(
+    [op](const std::shared_ptr<Node<TL>>&left, const std::shared_ptr<Node<TR>>& right){
+      auto cast_left = std::make_shared<Cast<TR, TL>>(left);
+      return op(cast_left, right);
+    },
+    boost::python::default_call_policies(),
+    boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<TL>>&, const std::shared_ptr<Node<TR>>&>()
+  );
+}
+
 }
 
 #endif //PYSTON_HELPERS_H

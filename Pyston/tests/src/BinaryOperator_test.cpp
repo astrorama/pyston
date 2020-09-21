@@ -17,7 +17,6 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <boost/python.hpp>
 #include "Pyston/AST/Node.h"
 #include "Pyston/AST/Placeholder.h"
 #include "PythonFixture.h"
