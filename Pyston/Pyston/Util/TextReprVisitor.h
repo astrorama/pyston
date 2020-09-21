@@ -20,7 +20,7 @@
 #define PYSTON_TEXTREPRVISITOR_H
 
 #include <list>
-#include "Pyston/AST/Node.h"
+#include "Pyston/Graph//Node.h"
 
 namespace Pyston {
 

@@ -20,8 +20,8 @@
 #define PYSTON_NODECONVERTER_H
 
 #include <boost/python.hpp>
-#include "Pyston/AST/Cast.h"
-#include "Pyston/AST/Constant.h"
+#include "Pyston/Graph/Cast.h"
+#include "Pyston/Graph/Constant.h"
 
 namespace Pyston {
 

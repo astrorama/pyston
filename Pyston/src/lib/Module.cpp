@@ -18,12 +18,12 @@
 
 #include <boost/python.hpp>
 #include "Pyston/ExceptionRaiser.h"
-#include "Pyston/Functors.h"
 #include "Pyston/Helpers.h"
 #include "Pyston/NodeConverter.h"
-#include "Pyston/AST/Cast.h"
-#include "Pyston/AST/Constant.h"
-#include "Pyston/AST/Placeholder.h"
+#include "Pyston/Graph/Cast.h"
+#include "Pyston/Graph/Constant.h"
+#include "Pyston/Graph/Functors.h"
+#include "Pyston/Graph/Placeholder.h"
 
 #if BOOST_VERSION < 105600
 #include <boost/units/detail/utility.hpp>

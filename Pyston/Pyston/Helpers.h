@@ -21,10 +21,9 @@
 
 #include <memory>
 #include <boost/python.hpp>
-#include "AST/Node.h"
-#include "Pyston/AST/BinaryOperator.h"
-#include "Pyston/AST/UnaryOperator.h"
-#include "Pyston/AST/Cast.h"
+#include "Pyston/Graph/BinaryOperator.h"
+#include "Pyston/Graph/UnaryOperator.h"
+#include "Pyston/Graph/Cast.h"
 
 namespace Pyston {
 

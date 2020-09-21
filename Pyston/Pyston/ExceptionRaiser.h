@@ -22,7 +22,7 @@
 #include <memory>
 #include <string>
 #include <boost/python/errors.hpp>
-#include "AST/Node.h"
+#include "Pyston/Graph/Node.h"
 
 namespace Pyston {
 

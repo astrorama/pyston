@@ -29,7 +29,7 @@
 #include "ElementsKernel/Auxiliary.h"
 #include "SEImplementation/PythonConfig/PythonInterpreter.h"
 #include "SEUtils/Python.h"
-#include "Pyston/AST/Placeholder.h"
+#include "Pyston/Graph/Placeholder.h"
 #include "Pyston/Util/GraphvizGenerator.h"
 
 using namespace Pyston;

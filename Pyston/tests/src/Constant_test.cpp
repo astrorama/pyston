@@ -17,8 +17,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <boost/python.hpp>
-#include "Pyston/AST/Node.h"
+#include "Pyston/Graph/Node.h"
 #include "PythonFixture.h"
 
 using namespace Pyston;
