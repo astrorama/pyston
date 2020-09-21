@@ -68,13 +68,16 @@ elements_add_executable(Example src/program/Example.cpp
 #                       INCLUDE_DIRS ElementsExamples
 #                       LINK_LIBRARIES ElementsExamples TYPE Boost)
 #===============================================================================
+elements_add_unit_test(BinaryOperatorTest tests/src/BinaryOperator_test.cpp
+        LINK_LIBRARIES Pyston
+        TYPE Boost)
 elements_add_unit_test(ConstantTest tests/src/Constant_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)
-elements_add_unit_test(UnaryOperatorTest tests/src/UnaryOperator_test.cpp
+elements_add_unit_test(FullChainTest tests/src/FullChain_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)
-elements_add_unit_test(BinaryOperatorTest tests/src/BinaryOperator_test.cpp
+elements_add_unit_test(UnaryOperatorTest tests/src/UnaryOperator_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)
 

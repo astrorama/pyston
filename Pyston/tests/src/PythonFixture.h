@@ -20,6 +20,10 @@
 #define PYSTON_PYTHONFIXTURE_H
 
 #include "Pyston/Module.h"
+#include <boost/python/object.hpp>
+#include <boost/python/import.hpp>
+#include <boost/python/exec.hpp>
+#include <boost/python/extract.hpp>
 
 namespace Pyston {
 

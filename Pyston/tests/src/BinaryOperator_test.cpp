@@ -107,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(PowFloatConstant_test, PythonFixture) {
   BOOST_CHECK_CLOSE(comp()->eval({{"x", 6.}}), 60466176., 1e-4);
 }
 
-BOOST_FIXTURE_TEST_CASE(GtFloatConstant_test, PythonFixture) {
+BOOST_FIXTURE_TEST_CASE(Gt_test, PythonFixture) {
   auto gt = py::eval("lambda x, y: x > y");
   auto X = std::make_shared<Placeholder<double>>("x");
   auto Y = std::make_shared<Placeholder<double>>("y");
@@ -117,6 +117,18 @@ BOOST_FIXTURE_TEST_CASE(GtFloatConstant_test, PythonFixture) {
 
   BOOST_CHECK_EQUAL(comp()->eval({{"x", 2.5}, {"y", 6.}}), false);
   BOOST_CHECK_EQUAL(comp()->eval({{"y", 2.5}, {"x", 6.}}), true);
+}
+
+BOOST_FIXTURE_TEST_CASE(GtCast_test, PythonFixture) {
+  auto gt = py::eval("lambda x, y: x > y");
+  auto X = std::make_shared<Placeholder<double>>("x");
+  auto Y = std::make_shared<Placeholder<double>>("y");
+
+  auto py_comp = gt(X, Y);
+  py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
+
+  BOOST_CHECK_EQUAL(comp()->eval({{"x", 2.5}, {"y", 6.}}), 0.);
+  BOOST_CHECK_EQUAL(comp()->eval({{"y", 2.5}, {"x", 6.}}), 1.);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
