@@ -83,7 +83,7 @@ using Value = boost::variant<bool, int64_t, double>;
  * A dictionary where the key corresponds to the name placeholders have,
  * and the Value they are assigned.
  */
-using Arguments = std::map<std::string, Value>;
+using Arguments = std::vector<Value>;
 
 /**
  * A node on the computing tree, which has an associated primitive type
@@ -114,6 +114,23 @@ public:
    *    Result of the evaluation
    */
   virtual T eval(const Arguments&) const = 0;
+
+  template<typename ...Args>
+  T eval(Args... args) const {
+    Arguments arguments;
+    return eval_helper(arguments, args...);
+  }
+
+protected:
+  T eval_helper(Arguments& arguments) const {
+    return eval(arguments);
+  }
+
+  template<typename A0, typename ...AN>
+  T eval_helper(Arguments& arguments, A0 v0, AN... an) const {
+    arguments.push_back(v0);
+    return eval_helper(arguments, an...);
+  }
 };
 
 /**

@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_SUITE(UnaryOperator_test)
 BOOST_FIXTURE_TEST_CASE(UnaryDouble_test, PythonFixture) {
   auto negative = py::eval("lambda x: -x", main_namespace);
   auto identity = py::eval("lambda x: +x", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
+  auto X = std::make_shared<Placeholder<double>>(0);
 
   auto py_negative_comp = negative(X);
   auto py_identiy_comp = identity(X);
@@ -37,17 +37,17 @@ BOOST_FIXTURE_TEST_CASE(UnaryDouble_test, PythonFixture) {
   py::extract<std::shared_ptr<Node<double>>> negative_comp(py_negative_comp);
   py::extract<std::shared_ptr<Node<double>>> identity_comp(py_identiy_comp);
 
-  BOOST_CHECK_EQUAL(negative_comp()->eval({{"x", 22.}}), -22.);
-  BOOST_CHECK_EQUAL(negative_comp()->eval({{"x", 48.5}}), -48.5);
+  BOOST_CHECK_EQUAL(negative_comp()->eval(22.), -22.);
+  BOOST_CHECK_EQUAL(negative_comp()->eval(48.5), -48.5);
 
-  BOOST_CHECK_EQUAL(identity_comp()->eval({{"x", 22.}}), 22.);
-  BOOST_CHECK_EQUAL(identity_comp()->eval({{"x", 48.5}}), 48.5);
+  BOOST_CHECK_EQUAL(identity_comp()->eval(22.), 22.);
+  BOOST_CHECK_EQUAL(identity_comp()->eval(48.5), 48.5);
 }
 
 BOOST_FIXTURE_TEST_CASE(UnaryInt_test, PythonFixture) {
   auto negative = py::eval("lambda x: -x", main_namespace);
   auto identity = py::eval("lambda x: +x", main_namespace);
-  auto X = std::make_shared<Placeholder<int64_t>>("x");
+  auto X = std::make_shared<Placeholder<int64_t>>(0);
 
   auto py_negative_comp = negative(X);
   auto py_identiy_comp = identity(X);
@@ -55,17 +55,17 @@ BOOST_FIXTURE_TEST_CASE(UnaryInt_test, PythonFixture) {
   py::extract<std::shared_ptr<Node<int64_t>>> negative_comp(py_negative_comp);
   py::extract<std::shared_ptr<Node<int64_t>>> identity_comp(py_identiy_comp);
 
-  BOOST_CHECK_EQUAL(negative_comp()->eval({{"x", 22l}}), -22);
-  BOOST_CHECK_EQUAL(negative_comp()->eval({{"x", 48l}}), -48);
+  BOOST_CHECK_EQUAL(negative_comp()->eval(22l), -22);
+  BOOST_CHECK_EQUAL(negative_comp()->eval(48l), -48);
 
-  BOOST_CHECK_EQUAL(identity_comp()->eval({{"x", 22l}}), 22);
-  BOOST_CHECK_EQUAL(identity_comp()->eval({{"x", 48l}}), 48);
+  BOOST_CHECK_EQUAL(identity_comp()->eval(22l), 22);
+  BOOST_CHECK_EQUAL(identity_comp()->eval(48l), 48);
 }
 
 BOOST_FIXTURE_TEST_CASE(CastUnary_test, PythonFixture) {
   auto negative = py::eval("lambda x: -x", main_namespace);
   auto identity = py::eval("lambda x: +x", main_namespace);
-  auto X = std::make_shared<Placeholder<int64_t>>("x");
+  auto X = std::make_shared<Placeholder<int64_t>>(0);
 
   auto py_negative_comp = negative(X);
   auto py_identiy_comp = identity(X);
@@ -73,18 +73,18 @@ BOOST_FIXTURE_TEST_CASE(CastUnary_test, PythonFixture) {
   py::extract<std::shared_ptr<Node<double>>> negative_comp(py_negative_comp);
   py::extract<std::shared_ptr<Node<double>>> identity_comp(py_identiy_comp);
 
-  BOOST_CHECK_EQUAL(negative_comp()->eval({{"x", 22l}}), -22.);
-  BOOST_CHECK_EQUAL(negative_comp()->eval({{"x", 48l}}), -48.);
+  BOOST_CHECK_EQUAL(negative_comp()->eval(22l), -22.);
+  BOOST_CHECK_EQUAL(negative_comp()->eval(48l), -48.);
 
-  BOOST_CHECK_EQUAL(identity_comp()->eval({{"x", 22l}}), 22.);
-  BOOST_CHECK_EQUAL(identity_comp()->eval({{"x", 48l}}), 48.);
+  BOOST_CHECK_EQUAL(identity_comp()->eval(22l), 22.);
+  BOOST_CHECK_EQUAL(identity_comp()->eval(48l), 48.);
 }
 
 BOOST_FIXTURE_TEST_CASE(Functions_test, PythonFixture) {
   auto log = py::eval("lambda x: np.log(x)", main_namespace);
   auto abs = py::eval("lambda x: np.abs(x)", main_namespace);
   auto cos = py::eval("lambda x: np.cos(x)", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
+  auto X = std::make_shared<Placeholder<double>>(0);
 
   auto py_log_comp = log(X);
   auto py_abs_comp = abs(X);
@@ -94,24 +94,24 @@ BOOST_FIXTURE_TEST_CASE(Functions_test, PythonFixture) {
   py::extract<std::shared_ptr<Node<double>>> abs_comp(py_abs_comp);
   py::extract<std::shared_ptr<Node<double>>> cos_comp(py_cos_comp);
 
-  BOOST_CHECK_CLOSE(log_comp()->eval({{"x", 100.}}), 4.6052, 1e-3);
-  BOOST_CHECK(std::isnan(log_comp()->eval({{"x", -10.}})));
-  BOOST_CHECK_CLOSE(abs_comp()->eval({{"x", 100.}}), 100., 1e-3);
-  BOOST_CHECK_CLOSE(abs_comp()->eval({{"x", -543.}}), 543., 1e-3);
-  BOOST_CHECK_CLOSE(cos_comp()->eval({{"x", 0.}}), 1., 1e-3);
-  BOOST_CHECK_CLOSE(cos_comp()->eval({{"x", M_PI}}), -1., 1e-3);
+  BOOST_CHECK_CLOSE(log_comp()->eval(100.), 4.6052, 1e-3);
+  BOOST_CHECK(std::isnan(log_comp()->eval(-10.)));
+  BOOST_CHECK_CLOSE(abs_comp()->eval(100.), 100., 1e-3);
+  BOOST_CHECK_CLOSE(abs_comp()->eval(-543.), 543., 1e-3);
+  BOOST_CHECK_CLOSE(cos_comp()->eval(0.), 1., 1e-3);
+  BOOST_CHECK_CLOSE(cos_comp()->eval(M_PI), -1., 1e-3);
 }
 
 BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
   auto func = py::eval("lambda x: +np.log(-x)", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
+  auto X = std::make_shared<Placeholder<double>>(0);
 
   auto py_comp = func(X);
 
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
   comp()->visit(text_visitor);
-  BOOST_CHECK_EQUAL(text_stream.str(), "+log(-x)");
+  BOOST_CHECK_EQUAL(text_stream.str(), "+log(-_0)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -37,14 +37,14 @@ public:
    * @param name
    *    Name of the Placeholder. It will be used to retrieve later the value assigned to it.
    */
-  explicit Placeholder(const std::string& name) : m_name{name} {
+  explicit Placeholder(const unsigned pos) : m_pos{pos} {
   }
 
   /**
    * @copydoc Node::repr
    */
   std::string repr() const final {
-    return m_name;
+    return "_" + std::to_string(m_pos);
   }
 
   /**
@@ -56,7 +56,7 @@ public:
    *    expected type T
    */
   T eval(const Arguments& args) const final {
-    return boost::get<T>(args.at(m_name));
+    return boost::get<T>(args.at(m_pos));
   }
 
   /**
@@ -68,7 +68,7 @@ public:
   }
 
 private:
-  std::string m_name;
+  unsigned m_pos;
 };
 
 } // end of namespace Pyston

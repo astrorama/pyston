@@ -28,68 +28,68 @@ BOOST_AUTO_TEST_SUITE(UnaryOperator_test)
 
 BOOST_FIXTURE_TEST_CASE(OpBoolFloat_test, PythonFixture) {
   auto function = py::eval("lambda x, y: (x > 0.) * y", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
 
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", 4.}, {"y", 2.}}), 2.);
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", -4.}, {"y", 2.}}), 0.);
+  BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 2.);
+  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
 }
 
 BOOST_FIXTURE_TEST_CASE(OpFloatBool_test, PythonFixture) {
   auto function = py::eval("lambda x, y: y * (x > 0.)", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
 
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", 4.}, {"y", 2.}}), 2.);
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", -4.}, {"y", 2.}}), 0.);
+  BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 2.);
+  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
 }
 
 BOOST_FIXTURE_TEST_CASE(OpInt_test, PythonFixture) {
   auto function = py::eval("lambda x, y: 5 * (x > 0.) + y", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
 
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", 4.}, {"y", 2.}}), 7.);
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", -4.}, {"y", 2.}}), 2.);
+  BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 7.);
+  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 2.);
 }
 
 BOOST_FIXTURE_TEST_CASE(OpIntReversed_test, PythonFixture) {
   auto function = py::eval("lambda x, y: y + (x > 0.) * 5", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
 
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", 4.}, {"y", 2.}}), 7.);
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", -4.}, {"y", 2.}}), 2.);
+  BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 7.);
+  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 2.);
 }
 
 BOOST_FIXTURE_TEST_CASE(AsBool_test, PythonFixture) {
   auto function = py::eval("lambda x: 0 if x else 1");
-  auto X = std::make_shared<Placeholder<double>>("x");
+  auto X = std::make_shared<Placeholder<double>>(0);
   BOOST_CHECK_THROW(function(X), py::error_already_set);
 }
 
 BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
   auto function = py::eval("lambda x, y: y + (x > 0.) * 5", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
 
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
   comp()->visit(text_visitor);
-  BOOST_CHECK_EQUAL(text_stream.str(), "(y + double((long((x > 0.000000)) * 5)))");
+  BOOST_CHECK_EQUAL(text_stream.str(), "(_1 + double((long((_0 > 0.000000)) * 5)))");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

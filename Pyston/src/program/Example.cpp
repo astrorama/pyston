@@ -98,8 +98,7 @@ public:
         // Setup placeholders
         py::list placeholders;
         for (int arg = 0; arg < nparams; ++arg) {
-          std::string var_name(1, 'a' + arg);
-          auto placeholder = std::make_shared<Placeholder<double>>(var_name);
+          auto placeholder = std::make_shared<Placeholder<double>>(arg);
           placeholders.append(placeholder);
         }
 
@@ -129,7 +128,7 @@ public:
     for (int i = 0; i < n; ++i) {
       double value = ::drand48() * 100;
       result.first.push_back(value);
-      result.second[std::string(1, 'a' + i)] = value;
+      result.second.emplace_back(value);
     }
     return result;
   }

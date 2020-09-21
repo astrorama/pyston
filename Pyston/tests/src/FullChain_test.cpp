@@ -28,54 +28,55 @@ BOOST_AUTO_TEST_SUITE(FullChain_test)
 
 BOOST_FIXTURE_TEST_CASE(OperatorChain_test, PythonFixture) {
   auto chain = py::eval("lambda x, y, z: 2 * x + y * 1.5 - z / 3", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
-  auto Z = std::make_shared<Placeholder<double>>("z");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto Z = std::make_shared<Placeholder<double>>(2);
 
   auto py_comp = chain(X, Y, Z);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_CLOSE(comp()->eval({{"x", 1.}, {"y", 2.}, {"z", 3.}}), 4.0, 1e-5);
+  BOOST_CHECK_CLOSE(comp()->eval(1., 2., 3.), 4.0, 1e-5);
 }
 
 BOOST_FIXTURE_TEST_CASE(FuncChain_test, PythonFixture) {
   auto chain = py::eval("lambda x, y, z: 2 ** np.log(x) + np.cos(y * 1.5) - np.exp(z) / 3",
                         main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
-  auto Z = std::make_shared<Placeholder<double>>("z");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto Z = std::make_shared<Placeholder<double>>(2);
 
   auto py_comp = chain(X, Y, Z);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_CLOSE(comp()->eval({{"x", 4.}, {"y", 2.}, {"z", 3.}}), -5.0711076556, 1e-5);
+  BOOST_CHECK_CLOSE(comp()->eval(4., 2., 3.), -5.0711076556, 1e-5);
 }
 
 BOOST_FIXTURE_TEST_CASE(ChainWithCast_test, PythonFixture) {
   auto chain = py::eval("lambda x, y, z: x * (z > 0.) + y * (z <= 0.)", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
-  auto Z = std::make_shared<Placeholder<double>>("z");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto Z = std::make_shared<Placeholder<double>>(2);
 
   auto py_comp = chain(X, Y, Z);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", 4.}, {"y", 2.}, {"z", 3.}}), 4.);
-  BOOST_CHECK_EQUAL(comp()->eval({{"x", 4.}, {"y", 2.}, {"z", -3.}}), 2.);
+  BOOST_CHECK_EQUAL(comp()->eval(4., 2., 3.), 4.);
+  BOOST_CHECK_EQUAL(comp()->eval(4., 2., -3.), 2.);
 }
 
 BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
   auto chain = py::eval("lambda x, y, z: 2 ** np.log(x) + np.cos(y * 1.5) - np.exp(z) / 3",
                         main_namespace);
-  auto X = std::make_shared<Placeholder<double>>("x");
-  auto Y = std::make_shared<Placeholder<double>>("y");
-  auto Z = std::make_shared<Placeholder<double>>("z");
+  auto X = std::make_shared<Placeholder<double>>(0);
+  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto Z = std::make_shared<Placeholder<double>>(2);
 
   auto py_comp = chain(X, Y, Z);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
   comp()->visit(text_visitor);
-  BOOST_CHECK_EQUAL(text_stream.str(), "(((2.000000 ^ log(x)) + cos((y * 1.500000))) - (exp(z) / 3.000000))");
+  BOOST_CHECK_EQUAL(text_stream.str(),
+                    "(((2.000000 ^ log(_0)) + cos((_1 * 1.500000))) - (exp(_2) / 3.000000))");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
