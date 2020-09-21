@@ -58,4 +58,39 @@ BOOST_FIXTURE_TEST_CASE(WrapperFallback_test, PythonFixture) {
   BOOST_CHECK_EQUAL(transparent(1, 2, 0.4), 0.4);
 }
 
+BOOST_FIXTURE_TEST_CASE(WrapperException_test, PythonFixture) {
+  py::exec(R"PYCODE(
+def raises_exception(x, y, z):
+  if z > 0.5:
+    return x **2 + y
+  else:
+    raise ValueError('Invalid Z value')
+)PYCODE", main_namespace);
+
+  auto py_func = main_namespace["raises_exception"];
+  std::function<double(double, double, double)> transparent;
+  {
+    Function<double, double, double, double> func(py_func);
+    BOOST_CHECK(func.usesFallback());
+    transparent = func;
+  }
+
+  BOOST_CHECK_EQUAL(transparent(1, 2, 0.6), 3);
+
+  try {
+    transparent(1, 2, 0.4);
+    BOOST_FAIL("Call should have raised an exception");
+  }
+  catch (const Exception& ex) {
+    BOOST_CHECK_EQUAL(std::string(ex.what()), "Invalid Z value");
+    BOOST_CHECK_GT(ex.getTraceback().size(), 0);
+    bool func_in_trace = false;
+    for (auto &trace : ex.getTraceback()) {
+      BOOST_TEST_MESSAGE(trace.filename << ": " << trace.funcname << " line " << trace.lineno);
+      func_in_trace |= trace.funcname == "raises_exception";
+    }
+    BOOST_CHECK(func_in_trace);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

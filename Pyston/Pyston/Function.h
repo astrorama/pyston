@@ -25,6 +25,7 @@
 #include <boost/python/extract.hpp>
 #include "Pyston/Graph/Placeholder.h"
 #include "Pyston/GIL.h"
+#include "Pyston/Exceptions.h"
 
 
 namespace Pyston {
@@ -83,7 +84,7 @@ public:
           return boost::python::extract<R>(res)();
         }
         catch (const boost::python::error_already_set&) {
-          throw std::runtime_error("Failed to execute wrapped function");
+          throw Exception();
         }
       };
     }
