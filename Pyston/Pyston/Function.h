@@ -24,6 +24,7 @@
 #include <boost/python/tuple.hpp>
 #include <boost/python/extract.hpp>
 #include "Pyston/Graph/Placeholder.h"
+#include "Pyston/GIL.h"
 
 
 namespace Pyston {
@@ -58,6 +59,7 @@ public:
    *    Python callable to translate, or wrap if needed
    */
   Function(boost::python::object pyfunc) : m_fallback{false} {
+    GILStateEnsure gil_ensure;
     // Try building a computing graph
     try {
       boost::python::list placeholders;
@@ -75,6 +77,7 @@ public:
       PyErr_Clear();
       m_fallback = true;
       m_functor = [pyfunc](Args ...args) -> R {
+        GILStateEnsure gil_ensure;
         try {
           auto res = pyfunc(args...);
           return boost::python::extract<R>(res)();
