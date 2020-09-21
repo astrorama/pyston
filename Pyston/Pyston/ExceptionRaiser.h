@@ -49,7 +49,7 @@ public:
    */
   void operator()(const std::shared_ptr<Node<T>>&) {
     PyErr_SetString(PyExc_RuntimeError, m_msg.c_str());
-    throw boost::python::error_already_set();
+    boost::python::throw_error_already_set();
   }
 
 private:
