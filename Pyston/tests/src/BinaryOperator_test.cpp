@@ -19,6 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include "Pyston/AST/Node.h"
 #include "Pyston/AST/Placeholder.h"
+#include "Pyston/Util/TextReprVisitor.h"
 #include "PythonFixture.h"
 
 using namespace Pyston;
@@ -128,6 +129,30 @@ BOOST_FIXTURE_TEST_CASE(GtCast_test, PythonFixture) {
 
   BOOST_CHECK_EQUAL(comp()->eval({{"x", 2.5}, {"y", 6.}}), 0.);
   BOOST_CHECK_EQUAL(comp()->eval({{"y", 2.5}, {"x", 6.}}), 1.);
+}
+
+BOOST_FIXTURE_TEST_CASE(ReprTest, PythonFixture) {
+  auto add = py::eval("lambda x, y: x + y");
+  auto X = std::make_shared<Placeholder<double>>("x");
+  auto Y = std::make_shared<Placeholder<double>>("y");
+
+  auto py_comp = add(X, Y);
+  py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
+
+  BOOST_CHECK_EQUAL(comp()->repr(), "+");
+}
+
+BOOST_FIXTURE_TEST_CASE(VisitTest, PythonFixture) {
+  auto add = py::eval("lambda x, y: x + y");
+  auto X = std::make_shared<Placeholder<double>>("x");
+  auto Y = std::make_shared<Placeholder<double>>("y");
+
+  auto py_comp = add(X, Y);
+  py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
+
+  comp()->visit(text_visitor);
+
+  BOOST_CHECK_EQUAL(text_stream.str(), "(x + y)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

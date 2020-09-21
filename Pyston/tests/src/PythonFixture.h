@@ -19,11 +19,13 @@
 #ifndef PYSTON_PYTHONFIXTURE_H
 #define PYSTON_PYTHONFIXTURE_H
 
-#include "Pyston/Module.h"
+#include <iomanip>
 #include <boost/python/object.hpp>
 #include <boost/python/import.hpp>
 #include <boost/python/exec.hpp>
 #include <boost/python/extract.hpp>
+#include "Pyston/Module.h"
+#include "Pyston/Util/TextReprVisitor.h"
 
 namespace Pyston {
 
@@ -38,12 +40,15 @@ struct PythonFixture {
   };
 
   boost::python::object main_namespace;
+  std::stringstream text_stream;
+  TextReprVisitor text_visitor;
 
-  PythonFixture() {
+  PythonFixture(): text_visitor{text_stream} {
     static Singleton singleton;
     auto main_module = boost::python::import("__main__");
     main_namespace = main_module.attr("__dict__");
     boost::python::import("pyston");
+    main_namespace["np"] = boost::python::import("numpy");
     main_namespace["np"] = boost::python::import("numpy");
   }
 

@@ -74,4 +74,16 @@ BOOST_FIXTURE_TEST_CASE(OpIntReversed_test, PythonFixture) {
   BOOST_CHECK_EQUAL(comp()->eval({{"x", -4.}, {"y", 2.}}), 2.);
 }
 
+BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
+  auto function = py::eval("lambda x, y: y + (x > 0.) * 5", main_namespace);
+  auto X = std::make_shared<Placeholder<double>>("x");
+  auto Y = std::make_shared<Placeholder<double>>("y");
+
+  auto py_comp = function(X, Y);
+  py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
+
+  comp()->visit(text_visitor);
+  BOOST_CHECK_EQUAL(text_stream.str(), "(y + double((long((x > 0.000000)) * 5)))");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

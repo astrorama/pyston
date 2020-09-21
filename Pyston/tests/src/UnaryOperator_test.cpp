@@ -103,4 +103,16 @@ BOOST_FIXTURE_TEST_CASE(Functions_test, PythonFixture) {
   BOOST_CHECK_CLOSE(cos_comp()->eval({{"x", M_PI}}), -1., 1e-3);
 }
 
+BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
+  auto func = py::eval("lambda x: +np.log(-x)", main_namespace);
+  auto X = std::make_shared<Placeholder<double>>("x");
+
+  auto py_comp = func(X);
+
+  py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
+
+  comp()->visit(text_visitor);
+  BOOST_CHECK_EQUAL(text_stream.str(), "+log(-x)");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

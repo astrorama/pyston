@@ -53,9 +53,7 @@ public:
    * @copydoc Node::repr
    */
   std::string repr() const final {
-    return std::string("Cast ") + demangle(typeid(From).name())
-           + " => " +
-           demangle(typeid(To).name());
+    return demangle(typeid(To).name());
   }
 
   /**

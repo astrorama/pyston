@@ -16,50 +16,42 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef PYSTON_GRAPHVIZGENERATOR_H
-#define PYSTON_GRAPHVIZGENERATOR_H
+#ifndef PYSTON_TEXTREPRVISITOR_H
+#define PYSTON_TEXTREPRVISITOR_H
 
-#include "Pyston/AST/Node.h"
 #include <list>
-#include <sstream>
+#include "Pyston/AST/Node.h"
 
 namespace Pyston {
 
 /**
- * Concrete implementation of the Visitor class for the computing trees.
- * It will generate a string representing the graph in a format compatible with graphviz.
+ * Visit a computation tree, and generate a (more or less) human readable
+ * representation of it
  */
-class GraphvizGenerator : public Visitor {
+class TextReprVisitor : public Visitor {
 public:
   /**
    * Constructor
-   * @param label
-   *    Name of the whole graph
+   * @param out_stream
+   *    Serialize into this stream
    */
-  GraphvizGenerator(const std::string& label);
+  TextReprVisitor(std::ostream& out_stream);
 
   /**
    * @copydoc Visitor::enter
    */
-  void enter(const NodeBase *node) override;
+  void enter(const NodeBase *base) override;
 
   /**
    * @copydoc Visitor::exit
    */
-  void exit(const NodeBase *) override;
+  void exit(const NodeBase *node) override;
 
-  /**
-   * @return
-   *    The graphviz representation of the visited graph
-   */
-  std::string str() const;
-
-private:
-  int64_t m_unique_id;
-  std::stringstream m_stream;
-  std::list<int64_t> m_stack;
+protected:
+  std::ostream& m_stream;
+  std::list<std::list<std::string>> m_stack;
 };
 
-}
+} // end of namespace Pyston
 
-#endif //PYSTON_GRAPHVIZGENERATOR_H
+#endif // PYSTON_TEXTREPRVISITOR_H

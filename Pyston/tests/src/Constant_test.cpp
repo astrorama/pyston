@@ -78,4 +78,12 @@ BOOST_FIXTURE_TEST_CASE(ConstantNumpy_test, PythonFixture) {
   BOOST_CHECK_CLOSE(node->eval({}), 2.9031, 1e-3);
 }
 
+BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
+  auto function = py::eval("lambda: 1 + 2 + 3", main_namespace);
+  auto ret = function();
+  std::shared_ptr<Node<double>> node = py::extract<std::shared_ptr<Node<double>>>(ret);
+  node->visit(text_visitor);
+  BOOST_CHECK_EQUAL(text_stream.str(), "6.000000");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
