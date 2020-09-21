@@ -74,6 +74,12 @@ BOOST_FIXTURE_TEST_CASE(OpIntReversed_test, PythonFixture) {
   BOOST_CHECK_EQUAL(comp()->eval({{"x", -4.}, {"y", 2.}}), 2.);
 }
 
+BOOST_FIXTURE_TEST_CASE(AsBool_test, PythonFixture) {
+  auto function = py::eval("lambda x: 0 if x else 1");
+  auto X = std::make_shared<Placeholder<double>>("x");
+  BOOST_CHECK_THROW(function(X), py::error_already_set);
+}
+
 BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
   auto function = py::eval("lambda x, y: y + (x > 0.) * 5", main_namespace);
   auto X = std::make_shared<Placeholder<double>>("x");
