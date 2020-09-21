@@ -25,7 +25,10 @@ namespace py = boost::python;
 
 BOOST_AUTO_TEST_SUITE(FunctionWrapper_test)
 
-
+/**
+ * Wrap a simple lambda expression. It should be able to
+ * translate directly, so no more calls to Python are required
+ */
 BOOST_FIXTURE_TEST_CASE(Wrapper_test, PythonFixture) {
   auto py_func = py::eval("lambda x, y: x**2 + y");
 
@@ -41,6 +44,12 @@ BOOST_FIXTURE_TEST_CASE(Wrapper_test, PythonFixture) {
   BOOST_CHECK_EQUAL(transparent(3, 2), 11);
 }
 
+/**
+ * Wrap a lambda expression that can *not* be translated, since one of the
+ * variables is used on a flow control statement (if).
+ * It should still be callable, even if through the interpreter. The flag
+ * must be set accordingly in any case.
+ */
 BOOST_FIXTURE_TEST_CASE(WrapperFallback_test, PythonFixture) {
   auto py_func = py::eval("lambda x, y, z: x ** 2 + y if z > 0.5 else z", main_namespace);
 
@@ -58,6 +67,11 @@ BOOST_FIXTURE_TEST_CASE(WrapperFallback_test, PythonFixture) {
   BOOST_CHECK_EQUAL(transparent(1, 2, 0.4), 0.4);
 }
 
+/**
+ * Wrap a lambda expression that can *not* be translated, and that,
+ * on top of it, will raise an exception in some cases. The wrapper must
+ * be able to catch and translate into a C++ exception.
+ */
 BOOST_FIXTURE_TEST_CASE(WrapperException_test, PythonFixture) {
   py::exec(R"PYCODE(
 def raises_exception(x, y, z):
@@ -75,8 +89,10 @@ def raises_exception(x, y, z):
     transparent = func;
   }
 
+  // Call that succeeds
   BOOST_CHECK_EQUAL(transparent(1, 2, 0.6), 3);
 
+  // Call that raises exception
   try {
     transparent(1, 2, 0.4);
     BOOST_FAIL("Call should have raised an exception");
@@ -85,7 +101,7 @@ def raises_exception(x, y, z):
     BOOST_CHECK_EQUAL(std::string(ex.what()), "Invalid Z value");
     BOOST_CHECK_GT(ex.getTraceback().size(), 0);
     bool func_in_trace = false;
-    for (auto &trace : ex.getTraceback()) {
+    for (auto& trace : ex.getTraceback()) {
       BOOST_TEST_MESSAGE(trace.filename << ": " << trace.funcname << " line " << trace.lineno);
       func_in_trace |= trace.funcname == "raises_exception";
     }

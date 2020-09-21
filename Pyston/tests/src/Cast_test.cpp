@@ -26,6 +26,9 @@ namespace py = boost::python;
 
 BOOST_AUTO_TEST_SUITE(UnaryOperator_test)
 
+/**
+ * Cast a boolean to left of the operator into a float
+ */
 BOOST_FIXTURE_TEST_CASE(OpBoolFloat_test, PythonFixture) {
   auto function = py::eval("lambda x, y: (x > 0.) * y", main_namespace);
   auto X = std::make_shared<Placeholder<double>>(0);
@@ -38,6 +41,9 @@ BOOST_FIXTURE_TEST_CASE(OpBoolFloat_test, PythonFixture) {
   BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
 }
 
+/**
+ * Cast a boolean to the right of the operator into a float
+ */
 BOOST_FIXTURE_TEST_CASE(OpFloatBool_test, PythonFixture) {
   auto function = py::eval("lambda x, y: y * (x > 0.)", main_namespace);
   auto X = std::make_shared<Placeholder<double>>(0);
@@ -50,6 +56,9 @@ BOOST_FIXTURE_TEST_CASE(OpFloatBool_test, PythonFixture) {
   BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
 }
 
+/**
+ * Cast a boolean to an integer (5 * bool), and the integer into a float (+y)
+ */
 BOOST_FIXTURE_TEST_CASE(OpInt_test, PythonFixture) {
   auto function = py::eval("lambda x, y: 5 * (x > 0.) + y", main_namespace);
   auto X = std::make_shared<Placeholder<double>>(0);
@@ -62,6 +71,10 @@ BOOST_FIXTURE_TEST_CASE(OpInt_test, PythonFixture) {
   BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 2.);
 }
 
+/**
+ * Cast a boolean to an integer (bool * 5), and the integer into a float (y +)
+ * Operators are reverse to test the cast is done properly regardless
+ */
 BOOST_FIXTURE_TEST_CASE(OpIntReversed_test, PythonFixture) {
   auto function = py::eval("lambda x, y: y + (x > 0.) * 5", main_namespace);
   auto X = std::make_shared<Placeholder<double>>(0);
@@ -74,12 +87,18 @@ BOOST_FIXTURE_TEST_CASE(OpIntReversed_test, PythonFixture) {
   BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 2.);
 }
 
+/**
+ * Using a placeholder on a flow control statement is not allowed
+ */
 BOOST_FIXTURE_TEST_CASE(AsBool_test, PythonFixture) {
   auto function = py::eval("lambda x: 0 if x else 1");
   auto X = std::make_shared<Placeholder<double>>(0);
   BOOST_CHECK_THROW(function(X), py::error_already_set);
 }
 
+/**
+ * Visit a graph with casts
+ */
 BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
   auto function = py::eval("lambda x, y: y + (x > 0.) * 5", main_namespace);
   auto X = std::make_shared<Placeholder<double>>(0);
