@@ -94,8 +94,18 @@ BOOST_FIXTURE_TEST_CASE(Functions_test, PythonFixture) {
   py::extract<std::shared_ptr<Node<double>>> abs_comp(py_abs_comp);
   py::extract<std::shared_ptr<Node<double>>> cos_comp(py_cos_comp);
 
+  // Warning: If compiling with --ffast-math, the compiler assumes there will be
+  // no NaN and Inf, so std::isnan will fail to identify a NaN.
+  // We wrap the check and do the test depending on the behavior
+  auto nan = std::numeric_limits<double>::quiet_NaN();
+  if (nan != nan) {
+    BOOST_CHECK(std::isnan(log_comp()->eval(-10.)));
+  }
+  else {
+    BOOST_TEST_MESSAGE("nan == nan, compiled with -ffinite-math-only?");
+  }
+
   BOOST_CHECK_CLOSE(log_comp()->eval(100.), 4.6052, 1e-3);
-  BOOST_CHECK(std::isnan(log_comp()->eval(-10.)));
   BOOST_CHECK_CLOSE(abs_comp()->eval(100.), 100., 1e-3);
   BOOST_CHECK_CLOSE(abs_comp()->eval(-543.), 543., 1e-3);
   BOOST_CHECK_CLOSE(cos_comp()->eval(0.), 1., 1e-3);
