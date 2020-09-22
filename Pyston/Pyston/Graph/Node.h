@@ -22,6 +22,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <typeindex>
 #include <vector>
 #include <boost/variant.hpp>
 
@@ -41,7 +42,7 @@ public:
    * @param type_info
    *    Type info of the inheriting Node T
    */
-  explicit NodeBase(const std::type_info& type_info) : m_type_info{type_info} {}
+  explicit NodeBase(const std::type_index& type_index) : m_type_index{type_index} {}
 
   /**
    * Destructor
@@ -66,12 +67,12 @@ public:
    * @return
    *    The type information of the inheriting Node
    */
-  const std::type_info& type() const {
-    return m_type_info;
+  const std::type_index& type() const {
+    return m_type_index;
   }
 
 private:
-  const std::type_info& m_type_info;
+  const std::type_index m_type_index;
 };
 
 /**

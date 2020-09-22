@@ -78,7 +78,7 @@ public:
       PyErr_Clear();
       m_fallback = true;
       m_functor = [pyfunc](Args ...args) -> R {
-        GILStateEnsure gil_ensure;
+        GILStateEnsure inner_gil_ensure;
         try {
           auto res = pyfunc(args...);
           return boost::python::extract<R>(res)();

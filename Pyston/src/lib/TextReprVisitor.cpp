@@ -21,7 +21,7 @@
 
 namespace Pyston {
 
-TextReprVisitor::TextReprVisitor(std::ostream& out_stream) : m_stream{out_stream} {
+TextReprVisitor::TextReprVisitor(std::ostream& out_stream) : m_stream(out_stream) {
 }
 
 void TextReprVisitor::enter(const NodeBase *) {
