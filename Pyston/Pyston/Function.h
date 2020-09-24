@@ -71,6 +71,7 @@ public:
       m_functor = [comp](Args ...args) {
         return comp->eval(args...);
       };
+      m_compiled = comp;
     }
     // If failed to do so (i.e. placeholder used on a control flow),
     // wrap the call to python
@@ -119,10 +120,18 @@ public:
     return m_functor(std::forward<Args>(args)...);
   }
 
+  /**
+   * Expose the compiled graph
+   */
+  std::shared_ptr<Node<R>> getCompiled() const {
+    return m_compiled;
+  }
+
 private:
   unsigned m_nargs;
   bool m_fallback;
   std::function<R(Args...)> m_functor;
+  std::shared_ptr<Node<R>> m_compiled;
 
   template<unsigned pos>
   static void placeholderHelper(boost::python::list&) {
