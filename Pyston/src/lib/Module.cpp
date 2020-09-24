@@ -123,6 +123,9 @@ struct RegisterNode {
       .def("__abs__", makeUnary<T, Abs>("abs"));
     // Upcast to double
     defCastOperations<double>(node);
+    node
+      .def("__pow__", makeBinary<T, double, Pow>("^"))
+      .def("__rpow__", makeBinary<T, double, Pow>("^", true));
   }
 
   static void general(py::class_<Node<T>, boost::noncopyable>& node) {
