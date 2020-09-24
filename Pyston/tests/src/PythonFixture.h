@@ -36,15 +36,19 @@ struct PythonFixture {
       if (PyImport_AppendInittab("pyston", &PyInit_libPyston) == -1)
         abort();
       Py_Initialize();
+      PyEval_InitThreads();
+      PyEval_SaveThread();
     }
   };
 
   boost::python::object main_namespace;
   std::stringstream text_stream;
   TextReprVisitor text_visitor;
+  PyGILState_STATE gil_state;
 
-  PythonFixture(): text_visitor{text_stream} {
+  PythonFixture() : text_visitor{text_stream} {
     static Singleton singleton;
+    gil_state = PyGILState_Ensure();
     auto main_module = boost::python::import("__main__");
     main_namespace = main_module.attr("__dict__");
     boost::python::import("pyston");
@@ -53,6 +57,7 @@ struct PythonFixture {
   }
 
   ~PythonFixture() {
+    PyGILState_Release(gil_state);
   }
 };
 

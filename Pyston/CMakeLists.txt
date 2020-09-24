@@ -83,6 +83,9 @@ elements_add_unit_test(FullChainTest tests/src/FullChain_test.cpp
 elements_add_unit_test(FunctionTest tests/src/Function_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)
+elements_add_unit_test(MultithreadTest tests/src/Multithread_test.cpp
+        LINK_LIBRARIES Pyston
+        TYPE Boost)
 elements_add_unit_test(UnaryOperatorTest tests/src/UnaryOperator_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)

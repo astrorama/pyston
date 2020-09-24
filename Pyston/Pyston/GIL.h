@@ -24,19 +24,33 @@
 namespace Pyston {
 
 /**
- * RAII for the Global Interlock
+ * RAII for the Global Interlock: Acquires at construction and releases at destruction
  */
-struct GILStateEnsure {
-  GILStateEnsure() {
+struct GILLocker {
+  GILLocker() {
     m_state = PyGILState_Ensure();
   }
 
-  ~GILStateEnsure() {
+  ~GILLocker() {
     PyGILState_Release(m_state);
   }
 
-private:
   PyGILState_STATE m_state;
+};
+
+/**
+ * RAII for the Global Interlock: Releases at construction and locks at destruction
+ */
+struct GILReleaser {
+  GILReleaser(PyGILState_STATE& state): m_state(state) {
+    PyGILState_Release(m_state);
+  }
+
+  ~GILReleaser() {
+    m_state = PyGILState_Ensure();
+  }
+
+  PyGILState_STATE &m_state;
 };
 
 } // end of namespace Pyston
