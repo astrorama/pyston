@@ -62,24 +62,6 @@ BOOST_FIXTURE_TEST_CASE(UnaryInt_test, PythonFixture) {
   BOOST_CHECK_EQUAL(identity_comp()->eval(48l), 48);
 }
 
-BOOST_FIXTURE_TEST_CASE(CastUnary_test, PythonFixture) {
-  auto negative = py::eval("lambda x: -x", main_namespace);
-  auto identity = py::eval("lambda x: +x", main_namespace);
-  auto X = std::make_shared<Placeholder<int64_t>>(0);
-
-  auto py_negative_comp = negative(X);
-  auto py_identiy_comp = identity(X);
-
-  py::extract<std::shared_ptr<Node<double>>> negative_comp(py_negative_comp);
-  py::extract<std::shared_ptr<Node<double>>> identity_comp(py_identiy_comp);
-
-  BOOST_CHECK_EQUAL(negative_comp()->eval(22l), -22.);
-  BOOST_CHECK_EQUAL(negative_comp()->eval(48l), -48.);
-
-  BOOST_CHECK_EQUAL(identity_comp()->eval(22l), 22.);
-  BOOST_CHECK_EQUAL(identity_comp()->eval(48l), 48.);
-}
-
 BOOST_FIXTURE_TEST_CASE(Functions_test, PythonFixture) {
   auto log = py::eval("lambda x: np.log(x)", main_namespace);
   auto abs = py::eval("lambda x: np.abs(x)", main_namespace);

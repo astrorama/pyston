@@ -105,18 +105,6 @@ BOOST_FIXTURE_TEST_CASE(Gt_test, PythonFixture) {
   BOOST_CHECK_EQUAL(comp()->eval(6., 2.5), true);
 }
 
-BOOST_FIXTURE_TEST_CASE(GtCast_test, PythonFixture) {
-  auto gt = py::eval("lambda x, y: x > y");
-  auto X = std::make_shared<Placeholder<double>>(0);
-  auto Y = std::make_shared<Placeholder<double>>(1);
-
-  auto py_comp = gt(X, Y);
-  py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
-
-  BOOST_CHECK_EQUAL(comp()->eval(2.5, 6.), 0.);
-  BOOST_CHECK_EQUAL(comp()->eval(6., 2.5), 1.);
-}
-
 BOOST_FIXTURE_TEST_CASE(ReprTest, PythonFixture) {
   auto add = py::eval("lambda x, y: x + y");
   auto X = std::make_shared<Placeholder<double>>(0);
