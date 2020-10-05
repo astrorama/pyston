@@ -27,9 +27,11 @@
 #include <boost/timer/timer.hpp>
 #include <ElementsKernel/ProgramHeaders.h>
 #include <ElementsKernel/Auxiliary.h>
+#include "Pyston/ExpressionTreeBuilder.h"
 #include "Pyston/Module.h"
 #include "Pyston/GIL.h"
 #include "Pyston/Graph/Placeholder.h"
+#include "Pyston/Graph/Functors.h"
 #include "Pyston/Util/GraphvizGenerator.h"
 #include "Pyston/Exceptions.h"
 
@@ -38,9 +40,22 @@ namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 namespace py = boost::python;
 
+/**
+ * Example custom function
+ */
+double world2pix(double x) {
+  return std::log10(x) * std::sin(x / 2);
+}
 
+template<typename T>
+using World2Pix = UnaryWrapper<T, T, world2pix>;
+
+/// Logger
 static Elements::Logging logger = Elements::Logging::getLogger("Example");
 
+/**
+ * Main program
+ */
 class Example : public Elements::Program {
 
 private:
@@ -225,6 +240,10 @@ public:
         GILLocker locker;
         auto main_module = boost::python::import("__main__");
         auto main_namespace = main_module.attr("__dict__");
+
+        ExpressionTreeBuilder builder;
+        builder.registerFunction<double, World2Pix>("world2pix");
+
         py::exec_file(pyfile.native().c_str(), main_namespace);
       }
 

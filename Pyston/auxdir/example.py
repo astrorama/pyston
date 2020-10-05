@@ -10,7 +10,7 @@ def myfunc1(x):
 
 def myfunc2(x, y):
     z = 5 + (y > 0.)
-    return x + y * z**np.log(x)
+    return x + pyston.world2pix(y * z**np.log(x))
 
 
 setattr(pyston, 'evaluate', dict())
