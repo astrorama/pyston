@@ -28,6 +28,7 @@
 #include "Pyston/Exceptions.h"
 #include "Pyston/GIL.h"
 #include "Pyston/Graph/Placeholder.h"
+#include "Pyston/Helpers.h"
 
 namespace Pyston {
 
@@ -52,6 +53,48 @@ public:
   template<typename Signature>
   std::pair<bool, std::function<Signature>> build(const boost::python::object& pyfunc) const {
     return buildHelper<Signature>::build(pyfunc);
+  }
+
+  /**
+   * Register an unary function
+   * @tparam T
+   *    Parameter type
+   * @tparam Functor
+   *    Functor *type*
+   * @param repr
+   *    Function name
+   * @note
+   *    The return type is deduced from the signature of Functor<T>::operator()
+   * @see
+   *    UnaryWrapper for wrapping regular functions
+   */
+  template<typename T, template<class> class Functor>
+  void registerFunction(const std::string& repr) {
+    auto function = makeUnary<T, Functor>(repr);
+    auto ns = boost::python::import("pyston");
+    ns.attr(repr.c_str()) = function;
+  }
+
+  /**
+   * Register a binary function
+   * @tparam TL
+   *    Left parameter type
+   * @tparam TR
+   *    Right parameter type
+   * @tparam Functor
+   *    Functor *type*
+   * @param repr
+   *    Function name
+   * @note
+   *    The return type is deduced from the signature of Functor<TL, TR>::operator()
+   * @see
+   *    BinaryWrapper for wrapping regular functions
+   */
+  template<typename TL, typename TR, template<class> class Functor>
+  void registerFunction(const std::string& repr) {
+    auto function = makeBinary<TL, TR, Functor>(repr);
+    auto ns = boost::python::import("pyston");
+    ns.attr(repr.c_str()) = function;
   }
 
 private:

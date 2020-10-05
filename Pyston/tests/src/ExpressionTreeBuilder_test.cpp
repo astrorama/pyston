@@ -18,6 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "Pyston/ExpressionTreeBuilder.h"
+#include "Pyston/Graph/Functors.h"
 #include "PythonFixture.h"
 
 using namespace Pyston;
@@ -107,6 +108,61 @@ def raises_exception(x, y, z):
     }
     BOOST_CHECK(func_in_trace);
   }
+}
+
+/**
+ * Register custom functions
+ */
+double world2pixel(double x) {
+  return std::sin(x) * 10;
+}
+
+double mishmash(double x, double y) {
+  return std::asinh(x) - std::log(y / 2);
+}
+
+template<typename T>
+using World2Pixel = UnaryWrapper<T, T, world2pixel>;
+
+template<typename T>
+using Mismash = BinaryWrapper<T, T, mishmash>;
+
+BOOST_FIXTURE_TEST_CASE(AddUnaryFunction_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+  builder.registerFunction<double, World2Pixel>("world2pixel");
+
+  py::exec(R"PYCODE(
+def uses_function(x, y):
+  return pyston.world2pixel(x + y)
+)PYCODE", main_namespace);
+
+  auto py_func = main_namespace["uses_function"];
+  std::function<double(double, double)> transparent;
+  bool compiled;
+  std::tie(compiled, transparent) = builder.build<double(double, double)>(py_func);
+  BOOST_CHECK(compiled);
+
+  double r = transparent(10, 20);
+  BOOST_CHECK_CLOSE(r, world2pixel(10 + 20), 1e-8);
+}
+
+BOOST_FIXTURE_TEST_CASE(AddBinaryFunction_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+  builder.registerFunction<double, double, Mismash>("mishmash");
+
+  py::exec(R"PYCODE(
+def uses_function(x, y):
+  return pyston.mishmash(x * 2, y)
+)PYCODE", main_namespace);
+
+  auto py_func = main_namespace["uses_function"];
+  std::function<double(double, double)> transparent;
+  bool compiled;
+  std::tie(compiled, transparent) = builder.build<double(double, double)>(py_func);
+  BOOST_CHECK(compiled);
+
+  double r = transparent(10, 20);
+  BOOST_CHECK_CLOSE(r, mishmash(10 * 2, 20), 1e-8);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

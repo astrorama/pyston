@@ -51,7 +51,7 @@ struct PythonFixture {
     gil_state = PyGILState_Ensure();
     auto main_module = boost::python::import("__main__");
     main_namespace = main_module.attr("__dict__");
-    boost::python::import("pyston");
+    main_namespace["pyston"] = boost::python::import("pyston");
     main_namespace["np"] = boost::python::import("numpy");
     main_namespace["np"] = boost::python::import("numpy");
   }
