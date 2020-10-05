@@ -80,7 +80,7 @@ elements_add_unit_test(ConstantTest tests/src/Constant_test.cpp
 elements_add_unit_test(FullChainTest tests/src/FullChain_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)
-elements_add_unit_test(FunctionTest tests/src/Function_test.cpp
+elements_add_unit_test(ExpressionTreeBuilderTest tests/src/ExpressionTreeBuilder_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)
 elements_add_unit_test(MultithreadTest tests/src/Multithread_test.cpp

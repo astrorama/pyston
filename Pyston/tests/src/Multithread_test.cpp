@@ -18,7 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
-#include "Pyston/Function.h"
+#include "Pyston/ExpressionTreeBuilder.h"
 #include "PythonFixture.h"
 
 using namespace Pyston;
@@ -79,13 +79,14 @@ BOOST_AUTO_TEST_SUITE(Multithread_test)
  * The expression can be "compiled" into a computing graph, which should be thread-safe
  */
 BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
   auto py_func = py::eval("lambda x, y, z: (z > 0.5) * np.sin(x) + (z <= 0.5) * np.log(y)",
                           main_namespace);
-  Function<double, double, double, double> func(py_func);
-  BOOST_CHECK(!func.usesFallback());
 
-  func.getCompiled()->visit(text_visitor);
-  BOOST_TEST_MESSAGE(text_stream.str());
+  std::function<double(double, double, double)> func;
+  bool compiled;
+  std::tie(compiled, func) = builder.build<double, double, double, double>(py_func);
+  BOOST_CHECK(compiled);
 
   std::vector<std::unique_ptr<Worker>> workers;
   boost::thread_group thread_group;
@@ -97,7 +98,7 @@ BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
 
   for (const auto& worker : workers) {
     BOOST_CHECK_EQUAL(worker->m_evaluations.size(), NITERATIONS);
-    for (auto &eval : worker->m_evaluations) {
+    for (auto& eval : worker->m_evaluations) {
       auto res_check = equivalent(eval.params[0], eval.params[1], eval.params[2]);
       BOOST_CHECK_CLOSE(res_check, eval.result, 1e-8);
     }
@@ -110,6 +111,7 @@ BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
  * the GIL lock/release to make them thread safe, and interchangeable with a compiled version
  */
 BOOST_FIXTURE_TEST_CASE(MultithreadNotCompiled_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
   py::exec(R"PYCODE(
 def with_conditional(x, y, z):
   if z > 0.5:
@@ -119,9 +121,11 @@ def with_conditional(x, y, z):
 )PYCODE", main_namespace);
 
   auto py_func = main_namespace["with_conditional"];
-  Function<double, double, double, double> func(py_func);
-  BOOST_CHECK(func.usesFallback());
-  BOOST_CHECK(func.getCompiled() == nullptr);
+  std::function<double(double, double, double)> func;
+  bool compiled;
+  std::tie(compiled, func) = builder.build<double, double, double, double>(py_func);
+
+  BOOST_CHECK(!compiled);
 
   std::vector<std::unique_ptr<Worker>> workers;
   {
@@ -136,7 +140,7 @@ def with_conditional(x, y, z):
 
   for (const auto& worker : workers) {
     BOOST_CHECK_EQUAL(worker->m_evaluations.size(), NITERATIONS);
-    for (auto &eval : worker->m_evaluations) {
+    for (auto& eval : worker->m_evaluations) {
       auto res_check = equivalent(eval.params[0], eval.params[1], eval.params[2]);
       BOOST_CHECK_CLOSE(res_check, eval.result, 1e-8);
     }

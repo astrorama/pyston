@@ -17,7 +17,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include "Pyston/Function.h"
+#include "Pyston/ExpressionTreeBuilder.h"
 #include "PythonFixture.h"
 
 using namespace Pyston;
@@ -30,15 +30,15 @@ BOOST_AUTO_TEST_SUITE(FunctionWrapper_test)
  * translate directly, so no more calls to Python are required
  */
 BOOST_FIXTURE_TEST_CASE(Wrapper_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
   auto py_func = py::eval("lambda x, y: x**2 + y");
 
   std::function<double(double, double)> transparent;
+  bool compiled;
   // Call directly
   {
-    Function<double, double, double> func(py_func);
-    BOOST_CHECK(!func.usesFallback());
-    BOOST_CHECK_EQUAL(func(2, 4), 8);
-    transparent = func;
+    std::tie(compiled, transparent) = builder.build<double, double, double>(py_func);
+    BOOST_CHECK(compiled);
   }
   // Original is out of scope, std::function should still be alive
   BOOST_CHECK_EQUAL(transparent(3, 2), 11);
@@ -51,16 +51,15 @@ BOOST_FIXTURE_TEST_CASE(Wrapper_test, PythonFixture) {
  * must be set accordingly in any case.
  */
 BOOST_FIXTURE_TEST_CASE(WrapperFallback_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
   auto py_func = py::eval("lambda x, y, z: x ** 2 + y if z > 0.5 else z", main_namespace);
 
   std::function<double(double, double, double)> transparent;
+  bool compiled;
   // Call directly
   {
-    Function<double, double, double, double> func(py_func);
-    BOOST_CHECK(func.usesFallback());
-    BOOST_CHECK_EQUAL(func(1., 2., 0.6), 3.);
-    BOOST_CHECK_CLOSE(func(1., 2., 0.4), 0.4, 1e-5);
-    transparent = func;
+    std::tie(compiled, transparent) = builder.build<double, double, double, double>(py_func);
+    BOOST_CHECK(!compiled);
   }
   // Original is out of scope, std::function should still be alive
   BOOST_CHECK_EQUAL(transparent(1, 2, 0.6), 3);
@@ -73,6 +72,7 @@ BOOST_FIXTURE_TEST_CASE(WrapperFallback_test, PythonFixture) {
  * be able to catch and translate into a C++ exception.
  */
 BOOST_FIXTURE_TEST_CASE(WrapperException_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
   py::exec(R"PYCODE(
 def raises_exception(x, y, z):
   if z > 0.5:
@@ -83,10 +83,10 @@ def raises_exception(x, y, z):
 
   auto py_func = main_namespace["raises_exception"];
   std::function<double(double, double, double)> transparent;
+  bool compiled;
   {
-    Function<double, double, double, double> func(py_func);
-    BOOST_CHECK(func.usesFallback());
-    transparent = func;
+    std::tie(compiled, transparent) = builder.build<double, double, double, double>(py_func);
+    BOOST_CHECK(!compiled);
   }
 
   // Call that succeeds
