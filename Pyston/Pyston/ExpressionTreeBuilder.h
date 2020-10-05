@@ -27,6 +27,7 @@
 #include <boost/python/tuple.hpp>
 
 #include "Pyston/Exceptions.h"
+#include "Pyston/ExpressionTree.h"
 #include "Pyston/GIL.h"
 #include "Pyston/Graph/Placeholder.h"
 #include "Pyston/Helpers.h"
@@ -52,7 +53,7 @@ public:
    *    be built, false otherwise. The second value is the wrapping functor.
    */
   template<typename Signature>
-  std::pair<bool, std::function<Signature>> build(const boost::python::object& pyfunc) const {
+  ExpressionTree<Signature> build(const boost::python::object& pyfunc) const {
     return buildHelper<Signature>::build(pyfunc);
   }
 
@@ -118,7 +119,7 @@ private:
    */
   template<typename R, typename... Args>
   struct buildHelper<R(Args...)> {
-    static std::pair<bool, std::function<R(Args...)>> build(const boost::python::object& pyfunc);
+    static ExpressionTree<R(Args...)> build(const boost::python::object& pyfunc);
   };
 };
 

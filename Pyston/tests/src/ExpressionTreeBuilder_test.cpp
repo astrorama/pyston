@@ -35,11 +35,11 @@ BOOST_FIXTURE_TEST_CASE(Wrapper_test, PythonFixture) {
   auto py_func = py::eval("lambda x, y: x**2 + y");
 
   std::function<double(double, double)> transparent;
-  bool compiled;
-  // Call directly
   {
-    std::tie(compiled, transparent) = builder.build<double(double, double)>(py_func);
-    BOOST_CHECK(compiled);
+    auto tree = builder.build<double(double, double)>(py_func);
+    BOOST_CHECK(tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
   }
   // Original is out of scope, std::function should still be alive
   BOOST_CHECK_EQUAL(transparent(3, 2), 11);
@@ -56,11 +56,12 @@ BOOST_FIXTURE_TEST_CASE(WrapperFallback_test, PythonFixture) {
   auto py_func = py::eval("lambda x, y, z: x ** 2 + y if z > 0.5 else z", main_namespace);
 
   std::function<double(double, double, double)> transparent;
-  bool compiled;
   // Call directly
   {
-    std::tie(compiled, transparent) = builder.build<double(double, double, double)>(py_func);
-    BOOST_CHECK(!compiled);
+    auto tree = builder.build<double(double, double, double)>(py_func);
+    BOOST_CHECK(!tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
   }
   // Original is out of scope, std::function should still be alive
   BOOST_CHECK_EQUAL(transparent(1, 2, 0.6), 3);
@@ -82,12 +83,13 @@ def raises_exception(x, y, z):
     raise ValueError('Invalid Z value')
 )PYCODE", main_namespace);
 
-  auto py_func = main_namespace["raises_exception"];
   std::function<double(double, double, double)> transparent;
-  bool compiled;
   {
-    std::tie(compiled, transparent) = builder.build<double(double, double, double)>(py_func);
-    BOOST_CHECK(!compiled);
+    auto py_func = main_namespace["raises_exception"];
+    auto tree = builder.build<double(double, double, double)>(py_func);
+    BOOST_CHECK(!tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
   }
 
   // Call that succeeds
@@ -139,11 +141,14 @@ def uses_function(x, y):
   return pyston.world2pixel(x + y)
 )PYCODE", main_namespace);
 
-  auto py_func = main_namespace["uses_function"];
   std::function<double(double, double)> transparent;
-  bool compiled;
-  std::tie(compiled, transparent) = builder.build<double(double, double)>(py_func);
-  BOOST_CHECK(compiled);
+  {
+    auto py_func = main_namespace["uses_function"];
+    auto tree = builder.build<double(double, double)>(py_func);
+    BOOST_CHECK(tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
+  }
 
   double r = transparent(10, 20);
   BOOST_CHECK_CLOSE(r, world2pixel(10 + 20), 1e-8);
@@ -161,11 +166,14 @@ def uses_function(x, y):
   return pyston.mishmash(x * 2, y)
 )PYCODE", main_namespace);
 
-  auto py_func = main_namespace["uses_function"];
   std::function<double(double, double)> transparent;
-  bool compiled;
-  std::tie(compiled, transparent) = builder.build<double(double, double)>(py_func);
-  BOOST_CHECK(compiled);
+  {
+    auto py_func = main_namespace["uses_function"];
+    auto tree = builder.build<double(double, double)>(py_func);
+    BOOST_CHECK(tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
+  }
 
   double r = transparent(10, 20);
   BOOST_CHECK_CLOSE(r, mishmash(10 * 2, 20), 1e-8);
@@ -187,11 +195,14 @@ def uses_function(x, y):
     return -1
 )PYCODE", main_namespace);
 
-  auto py_func = main_namespace["uses_function"];
   std::function<double(double, double)> transparent;
-  bool compiled;
-  std::tie(compiled, transparent) = builder.build<double(double, double)>(py_func);
-  BOOST_CHECK(!compiled);
+  {
+    auto py_func = main_namespace["uses_function"];
+    auto tree = builder.build<double(double, double)>(py_func);
+    BOOST_CHECK(!tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
+  }
 
   double r = transparent(10, 20);
   BOOST_CHECK_CLOSE(r, mishmash(10 * 2, 20), 1e-8);

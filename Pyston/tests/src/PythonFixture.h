@@ -42,11 +42,9 @@ struct PythonFixture {
   };
 
   boost::python::object main_namespace;
-  std::stringstream text_stream;
-  TextReprVisitor text_visitor;
   PyGILState_STATE gil_state;
 
-  PythonFixture() : text_visitor{text_stream} {
+  PythonFixture() {
     static Singleton singleton;
     gil_state = PyGILState_Ensure();
     auto main_module = boost::python::import("__main__");
@@ -58,6 +56,14 @@ struct PythonFixture {
 
   ~PythonFixture() {
     PyGILState_Release(gil_state);
+  }
+
+  template<typename T>
+  std::string textRepr(const std::shared_ptr<Node<T>>& root) const {
+    std::stringstream text_stream;
+    TextReprVisitor text_visitor{text_stream};
+    root->visit(text_visitor);
+    return text_stream.str();
   }
 };
 

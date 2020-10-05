@@ -84,9 +84,12 @@ BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
                           main_namespace);
 
   std::function<double(double, double, double)> func;
-  bool compiled;
-  std::tie(compiled, func) = builder.build<double(double, double, double)>(py_func);
-  BOOST_CHECK(compiled);
+  {
+    auto tree = builder.build<double(double, double, double)>(py_func);
+    BOOST_CHECK(tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    func = tree;
+  }
 
   std::vector<std::unique_ptr<Worker>> workers;
   boost::thread_group thread_group;
@@ -122,10 +125,12 @@ def with_conditional(x, y, z):
 
   auto py_func = main_namespace["with_conditional"];
   std::function<double(double, double, double)> func;
-  bool compiled;
-  std::tie(compiled, func) = builder.build<double(double, double, double)>(py_func);
-
-  BOOST_CHECK(!compiled);
+  {
+    auto tree = builder.build<double(double, double, double)>(py_func);
+    BOOST_CHECK(!tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    func = tree;
+  }
 
   std::vector<std::unique_ptr<Worker>> workers;
   {

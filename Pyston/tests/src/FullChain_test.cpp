@@ -74,9 +74,8 @@ BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
   auto py_comp = chain(X, Y, Z);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  comp()->visit(text_visitor);
-  BOOST_CHECK_EQUAL(text_stream.str(),
-                    "(((2.000000 ^ log(_0)) + cos((_1 * 1.500000))) - (exp(_2) / 3.000000))");
+  auto txt = textRepr(comp());
+  BOOST_CHECK_EQUAL(txt, "(((2.000000 ^ log(_0)) + cos((_1 * 1.500000))) - (exp(_2) / 3.000000))");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

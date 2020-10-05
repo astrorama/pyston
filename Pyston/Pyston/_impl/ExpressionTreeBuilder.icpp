@@ -16,14 +16,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "Pyston/Graph/PythonCall.h"
 
 namespace Pyston {
 
 template<typename R, typename... Args>
-auto ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::object& pyfunc)
--> std::pair<bool, std::function<R(Args...)>> {
+ExpressionTree<R(Args...)>
+ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::object& pyfunc) {
   GILLocker gil_ensure;
-  std::function<R(Args...)> functor;
+
+  std::shared_ptr<Node<R>> root;
   bool compiled;
 
   // Try building a computing graph
@@ -31,30 +33,17 @@ auto ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::
     boost::python::list placeholders;
     placeholderHelper<0, Args...>(placeholders);
     auto py_comp = pyfunc(*boost::python::tuple(placeholders));
-    boost::python::extract<std::shared_ptr<Node<R>>> extractor(py_comp);
-    auto comp = extractor();
-    functor = [comp](Args ...args) {
-      return comp->eval(args...);
-    };
+    root = boost::python::extract<std::shared_ptr<Node<R>>>(py_comp);
     compiled = true;
   }
   // If failed to do so (i.e. placeholder used on a control flow),
   // wrap the call to python
   catch (const boost::python::error_already_set&) {
     PyErr_Clear();
-    functor = [pyfunc](Args ...args) -> R {
-      GILLocker inner_gil_ensure;
-      try {
-        auto res = pyfunc(args...);
-        return boost::python::extract<R>(res)();
-      }
-      catch (const boost::python::error_already_set&) {
-        throw Exception();
-      }
-    };
+    root = std::make_shared<PythonCall<R>>(pyfunc);
     compiled = false;
   }
-  return std::make_pair(compiled, functor);
+  return ExpressionTree<R(Args...)>(compiled, root);
 }
 
 template<typename T, template<class> class Functor>

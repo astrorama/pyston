@@ -39,8 +39,11 @@ void TextReprVisitor::exit(const NodeBase *node) {
   else if (children.size() == 1) {
     self_repr << node->repr() << '(' << children.front() << ')';
   }
-  else if (children.size() == 2) {
+  else if (children.size() == 2 && node_repr.size() == 1) {
     self_repr << '(' << children.front() << ' ' << node->repr() << ' ' << children.back() << ')';
+  }
+  else if (children.size() == 2) {
+    self_repr << node->repr() << '(' << children.front() << ", " << children.back() << ')';
   }
   else {
     self_repr << node->repr();

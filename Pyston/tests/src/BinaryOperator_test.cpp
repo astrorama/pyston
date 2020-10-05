@@ -124,9 +124,8 @@ BOOST_FIXTURE_TEST_CASE(VisitTest, PythonFixture) {
   auto py_comp = add(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  comp()->visit(text_visitor);
-
-  BOOST_CHECK_EQUAL(text_stream.str(), "(_0 + _1)");
+  auto txt = textRepr(comp());
+  BOOST_CHECK_EQUAL(txt, "(_0 + _1)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

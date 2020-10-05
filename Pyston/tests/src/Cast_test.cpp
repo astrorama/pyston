@@ -107,8 +107,8 @@ BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  comp()->visit(text_visitor);
-  BOOST_CHECK_EQUAL(text_stream.str(), "(_1 + double((long((_0 > 0.000000)) * 5)))");
+  auto txt = textRepr(comp());
+  BOOST_CHECK_EQUAL(txt, "(_1 + double((long((_0 > 0.000000)) * 5)))");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

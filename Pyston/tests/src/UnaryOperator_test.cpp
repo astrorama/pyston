@@ -102,8 +102,8 @@ BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
 
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  comp()->visit(text_visitor);
-  BOOST_CHECK_EQUAL(text_stream.str(), "+log(-_0)");
+  auto txt = textRepr(comp());
+  BOOST_CHECK_EQUAL(txt, "+log(-_0)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
