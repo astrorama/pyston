@@ -25,12 +25,13 @@
 #include <boost/python.hpp>
 #include <boost/thread.hpp>
 #include <boost/timer/timer.hpp>
-#include "ElementsKernel/ProgramHeaders.h"
-#include "ElementsKernel/Auxiliary.h"
-#include "SEImplementation/PythonConfig/PythonInterpreter.h"
-#include "SEUtils/Python.h"
+#include <ElementsKernel/ProgramHeaders.h>
+#include <ElementsKernel/Auxiliary.h>
+#include "Pyston/Module.h"
+#include "Pyston/GIL.h"
 #include "Pyston/Graph/Placeholder.h"
 #include "Pyston/Util/GraphvizGenerator.h"
+#include "Pyston/Exceptions.h"
 
 using namespace Pyston;
 namespace po = boost::program_options;
@@ -83,11 +84,10 @@ public:
   std::map<int, std::pair<py::object, std::shared_ptr<Node<double>>>> getFunctions() {
     std::map<int, std::pair<py::object, std::shared_ptr<Node<double>>>> calls;
 
-    SourceXtractor::GILStateEnsure ensure;
+    GILLocker locker;
 
-    py::object pyston = py::import("libPyston");
-    py::object module = py::import("sourcextractor.config");
-    py::dict evaluate = py::extract<py::dict>(module.attr("evaluate"));
+    py::object pyston = py::import("pyston");
+    py::dict evaluate = py::extract<py::dict>(pyston.attr("evaluate"));
     py::list keys = evaluate.keys();
 
     for (int i = 0; i < py::len(keys); ++i) {
@@ -116,7 +116,7 @@ public:
         calls[nparams] = std::make_pair(func, node);
       }
       catch (const py::error_already_set&) {
-        SourceXtractor::pyToElementsException(logger);
+        throw Exception();
       }
     }
 
@@ -135,7 +135,7 @@ public:
 
   void runPython(boost::python::object func, const std::vector<double>& args) {
     for (int j = 0; j < m_repeats; ++j) {
-      SourceXtractor::GILStateEnsure ensure;
+      GILLocker locker;
       func(*py::tuple(args));
     }
   }
@@ -209,16 +209,31 @@ public:
     if (args.count("dot-file"))
       m_dot_file = args.at("dot-file").as<std::string>();
 
-    // Setup the python part
-    auto& interpreter = SourceXtractor::PythonInterpreter::getSingleton();
+    // Initialize python
+    PyImport_AppendInittab("pyston", &PyInit_libPyston);
+    Py_Initialize();
+    PyEval_InitThreads();
+    PyEval_SaveThread();
+
     fs::path pyfile = args.at("file").as<std::string>();
     if (!fs::exists(pyfile)) {
       pyfile = Elements::getAuxiliaryPath(pyfile);
     }
-    interpreter.runFile(pyfile.native(), {});
 
-    // Evaluate calls
-    evalExamples();
+    try {
+      {
+        GILLocker locker;
+        auto main_module = boost::python::import("__main__");
+        auto main_namespace = main_module.attr("__dict__");
+        py::exec_file(pyfile.native().c_str(), main_namespace);
+      }
+
+      // Evaluate calls
+      evalExamples();
+    }
+    catch (const py::error_already_set&) {
+      throw Exception();
+    }
 
     return Elements::ExitCode::OK;
   }

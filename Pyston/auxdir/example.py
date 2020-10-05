@@ -1,5 +1,5 @@
-import sourcextractor.config as config
 import numpy as np
+import pyston
 
 a = 42
 
@@ -13,8 +13,8 @@ def myfunc2(x, y):
     return x + y * z**np.log(x)
 
 
-config.evaluate = dict()
-#config.evaluate[0] = lambda: 5
-#config.evaluate[1] = lambda x: True + x
-config.evaluate[2] = lambda x, y: myfunc2(x, y)
-#config.evaluate[3] = lambda x, y, z: z + y + x  # myfunc2(x, y)
+setattr(pyston, 'evaluate', dict())
+#pyston.evaluate[0] = lambda: 5
+#pyston.evaluate[1] = lambda x: True + x
+pyston.evaluate[2] = lambda x, y: myfunc2(x, y)
+#pyston.evaluate[3] = lambda x, y, z: z + y + x  # myfunc2(x, y)

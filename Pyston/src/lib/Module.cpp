@@ -17,6 +17,7 @@
  */
 
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "Pyston/ExceptionRaiser.h"
 #include "Pyston/Helpers.h"
 #include "Pyston/NodeConverter.h"
@@ -192,6 +193,13 @@ BOOST_PYTHON_MODULE (libPyston) {
   RegisterNode<double>::Do();
   RegisterNode<int64_t>::Do();
   RegisterNode<bool>::Do();
+
+  // Vector types
+  py::class_<std::vector<double> >("_DoubleVector")
+    .def(py::vector_indexing_suite<std::vector<double>>());
+
+  py::class_<std::vector<int64_t> >("_IntVector")
+    .def(py::vector_indexing_suite<std::vector<int64_t>>());
 }
 
 } // end of namespace Pyston

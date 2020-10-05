@@ -14,7 +14,6 @@ elements_subdir(Pyston)
 #         elements_depends_on_subdirs(ElementsKernel)
 #===============================================================================
 elements_depends_on_subdirs(ElementsKernel)
-elements_depends_on_subdirs(SEImplementation)
 
 #===============================================================================
 # Add the find_package macro (a pure CMake command) here to locate the
@@ -46,7 +45,7 @@ elements_add_library(Pyston src/lib/*.cpp
         LINK_LIBRARIES
           Boost BoostPython
           PythonLibs PythonInterp
-          ElementsKernel SEImplementation
+          ElementsKernel
         PUBLIC_HEADERS Pyston)
 
 #===============================================================================

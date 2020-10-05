@@ -16,11 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "Pyston/Exceptions.h"
 #include <Python.h>
 #include <boost/python/extract.hpp>
 #include <boost/python/handle.hpp>
 #include <boost/python/object.hpp>
+#include "Pyston/Exceptions.h"
 
 namespace py = boost::python;
 
