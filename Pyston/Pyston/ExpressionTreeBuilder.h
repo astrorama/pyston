@@ -23,6 +23,7 @@
 #include <tuple>
 #include <boost/python/list.hpp>
 #include <boost/python/object.hpp>
+#include <boost/python/object/add_to_namespace.hpp>
 #include <boost/python/tuple.hpp>
 
 #include "Pyston/Exceptions.h"
@@ -69,11 +70,7 @@ public:
    *    UnaryWrapper for wrapping regular functions
    */
   template<typename T, template<class> class Functor>
-  void registerFunction(const std::string& repr) {
-    auto function = makeUnary<T, Functor>(repr);
-    auto ns = boost::python::import("pyston");
-    ns.attr(repr.c_str()) = function;
-  }
+  void registerFunction(const std::string& repr);
 
   /**
    * Register a binary function
@@ -91,11 +88,7 @@ public:
    *    BinaryWrapper for wrapping regular functions
    */
   template<typename TL, typename TR, template<class> class Functor>
-  void registerFunction(const std::string& repr) {
-    auto function = makeBinary<TL, TR, Functor>(repr);
-    auto ns = boost::python::import("pyston");
-    ns.attr(repr.c_str()) = function;
-  }
+  void registerFunction(const std::string& repr);
 
 private:
   template<unsigned pos>

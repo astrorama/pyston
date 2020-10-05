@@ -111,7 +111,7 @@ def raises_exception(x, y, z):
 }
 
 /**
- * Register custom functions
+ * Custom functions
  */
 double world2pixel(double x) {
   return std::sin(x) * 10;
@@ -127,6 +127,9 @@ using World2Pixel = UnaryWrapper<T, T, world2pixel>;
 template<typename T>
 using Mismash = BinaryWrapper<T, T, mishmash>;
 
+/**
+ * Register a custom unary function, evaluated within an Expression Tree
+ */
 BOOST_FIXTURE_TEST_CASE(AddUnaryFunction_test, PythonFixture) {
   ExpressionTreeBuilder builder;
   builder.registerFunction<double, World2Pixel>("world2pixel");
@@ -146,6 +149,9 @@ def uses_function(x, y):
   BOOST_CHECK_CLOSE(r, world2pixel(10 + 20), 1e-8);
 }
 
+/**
+ * Register a binary function, evaluated within an Expression Tree
+ */
 BOOST_FIXTURE_TEST_CASE(AddBinaryFunction_test, PythonFixture) {
   ExpressionTreeBuilder builder;
   builder.registerFunction<double, double, Mismash>("mishmash");
@@ -163,6 +169,35 @@ def uses_function(x, y):
 
   double r = transparent(10, 20);
   BOOST_CHECK_CLOSE(r, mishmash(10 * 2, 20), 1e-8);
+}
+
+/**
+ * Register a binary function, evaluated directly via Python since there is
+ * a conditional
+ */
+BOOST_FIXTURE_TEST_CASE(AddBinaryFunctionNonCompilable_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+  builder.registerFunction<double, double, Mismash>("mishmash");
+
+  py::exec(R"PYCODE(
+def uses_function(x, y):
+  if y > 0:
+    return pyston.mishmash(x * 2, y)
+  else:
+    return -1
+)PYCODE", main_namespace);
+
+  auto py_func = main_namespace["uses_function"];
+  std::function<double(double, double)> transparent;
+  bool compiled;
+  std::tie(compiled, transparent) = builder.build<double(double, double)>(py_func);
+  BOOST_CHECK(!compiled);
+
+  double r = transparent(10, 20);
+  BOOST_CHECK_CLOSE(r, mishmash(10 * 2, 20), 1e-8);
+
+  r = transparent(22, -1);
+  BOOST_CHECK_EQUAL(r, -1.);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

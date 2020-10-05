@@ -38,8 +38,8 @@ auto ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::
     };
     compiled = true;
   }
-    // If failed to do so (i.e. placeholder used on a control flow),
-    // wrap the call to python
+  // If failed to do so (i.e. placeholder used on a control flow),
+  // wrap the call to python
   catch (const boost::python::error_already_set&) {
     PyErr_Clear();
     functor = [pyfunc](Args ...args) -> R {
@@ -55,6 +55,39 @@ auto ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::
     compiled = false;
   }
   return std::make_pair(compiled, functor);
+}
+
+template<typename T, template<class> class Functor>
+void ExpressionTreeBuilder::registerFunction(const std::string& repr) {
+  auto ns = boost::python::import("pyston");
+  // Add the function for Nodes
+  auto function = makeUnary<T, Functor>(repr);
+  boost::python::objects::add_to_namespace(ns, repr.c_str(), function);
+  // Overload for the primitive types, so it can be evaluated even with non compilable expressions
+  typedef decltype(std::declval<Functor<T>>()(T())) R;
+  auto direct = boost::python::make_function(
+    Functor<T>(),
+    boost::python::default_call_policies(),
+    boost::mpl::vector<R, T>()
+  );
+  boost::python::objects::add_to_namespace(ns, repr.c_str(), direct);
+}
+
+template<typename TL, typename TR, template<class> class Functor>
+void ExpressionTreeBuilder::registerFunction(const std::string& repr) {
+  auto ns = boost::python::import("pyston");
+  // Add the function for Nodes
+  auto function = makeBinary<TL, TR, Functor>(repr);
+  boost::python::objects::add_to_namespace(ns, repr.c_str(), function);
+  // Overload for the primitive types, so it can be evaluated even with non compilable expressions
+  using T = TR;
+  typedef decltype(std::declval<Functor<T>>()(T(), T())) R;
+  auto direct = boost::python::make_function(
+    Functor<TR>(),
+    boost::python::default_call_policies(),
+    boost::mpl::vector<R, TL, TR>()
+  );
+  boost::python::objects::add_to_namespace(ns, repr.c_str(), direct);
 }
 
 } // end of namespace Pyston
