@@ -1,6 +1,20 @@
-//
-// Created by aalvarez on 05/10/2020.
-//
+/**
+ * @copyright (C) 2012-2020 Euclid Science Ground Segment
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 3.0 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 
 #ifndef PYSTON_EXPRESSIONTREEBUILDER_H
 #define PYSTON_EXPRESSIONTREEBUILDER_H
@@ -17,44 +31,27 @@
 
 namespace Pyston {
 
+/**
+ * Builds an expression tree from a Python function, given its signature.
+ * If it is not possible to do so (for instance, due to the use of branching conditional
+ * on some placeholder), it will wrap the Python function in a compatible manner
+ */
 class ExpressionTreeBuilder {
 public:
 
-  template<typename R, typename ...Args>
-  std::pair<bool, std::function<R(Args...)>> build(const boost::python::object& pyfunc) const {
-    GILLocker gil_ensure;
-    std::function<R(Args...)> functor;
-    bool compiled;
-
-    // Try building a computing graph
-    try {
-      boost::python::list placeholders;
-      placeholderHelper<0, Args...>(placeholders);
-      auto py_comp = pyfunc(*boost::python::tuple(placeholders));
-      boost::python::extract<std::shared_ptr<Node<R>>> extractor(py_comp);
-      auto comp = extractor();
-      functor = [comp](Args ...args) {
-        return comp->eval(args...);
-      };
-      compiled = true;
-    }
-    // If failed to do so (i.e. placeholder used on a control flow),
-    // wrap the call to python
-    catch (const boost::python::error_already_set&) {
-      PyErr_Clear();
-      functor = [pyfunc](Args ...args) -> R {
-        GILLocker inner_gil_ensure;
-        try {
-          auto res = pyfunc(args...);
-          return boost::python::extract<R>(res)();
-        }
-        catch (const boost::python::error_already_set&) {
-          throw Exception();
-        }
-      };
-      compiled = false;
-    }
-    return std::make_pair(compiled, functor);
+  /**
+   * Build an expression tree, or wrap the Python function in a compatible manner
+   * @tparam Signature
+   *    Function signature (i.e. double(double,double))
+   * @param pyfunc
+   *    Python object pointing to a callable. Its signature must match the template.
+   * @return
+   *    A pair, where the first value is a boolean set to `true` if an expression tree could
+   *    be built, false otherwise. The second value is the wrapping functor.
+   */
+  template<typename Signature>
+  std::pair<bool, std::function<Signature>> build(const boost::python::object& pyfunc) const {
+    return buildHelper<Signature>::build(pyfunc);
   }
 
 private:
@@ -73,8 +70,28 @@ private:
     placeholders.append(std::make_shared<Placeholder<A1>>(pos + 1));
     placeholderHelper<pos + 2, AN...>(placeholders);
   }
+
+  /**
+   * Required to support function signatures
+   */
+  template<typename Signature>
+  struct buildHelper;
+
+  /**
+   * Specialization that "unwraps" the function signature into return type and arguments
+   */
+  template<typename R, typename... Args>
+  struct buildHelper<R(Args...)> {
+    static std::pair<bool, std::function<R(Args...)>> build(const boost::python::object& pyfunc);
+  };
 };
 
 } // end of namespace Pyston
+
+#define PYSTON_EXPRESSIONTREEBUILDER_IMPL
+
+#include "Pyston/_impl/ExpressionTreeBuilder.icpp"
+
+#undef PYSTON_EXPRESSIONTREEBUILDER_IMPL
 
 #endif //PYSTON_EXPRESSIONTREEBUILDER_H

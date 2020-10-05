@@ -37,7 +37,7 @@ BOOST_FIXTURE_TEST_CASE(Wrapper_test, PythonFixture) {
   bool compiled;
   // Call directly
   {
-    std::tie(compiled, transparent) = builder.build<double, double, double>(py_func);
+    std::tie(compiled, transparent) = builder.build<double(double, double)>(py_func);
     BOOST_CHECK(compiled);
   }
   // Original is out of scope, std::function should still be alive
@@ -58,7 +58,7 @@ BOOST_FIXTURE_TEST_CASE(WrapperFallback_test, PythonFixture) {
   bool compiled;
   // Call directly
   {
-    std::tie(compiled, transparent) = builder.build<double, double, double, double>(py_func);
+    std::tie(compiled, transparent) = builder.build<double(double, double, double)>(py_func);
     BOOST_CHECK(!compiled);
   }
   // Original is out of scope, std::function should still be alive
@@ -85,7 +85,7 @@ def raises_exception(x, y, z):
   std::function<double(double, double, double)> transparent;
   bool compiled;
   {
-    std::tie(compiled, transparent) = builder.build<double, double, double, double>(py_func);
+    std::tie(compiled, transparent) = builder.build<double(double, double, double)>(py_func);
     BOOST_CHECK(!compiled);
   }
 

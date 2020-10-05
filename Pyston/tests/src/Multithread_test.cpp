@@ -85,7 +85,7 @@ BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
 
   std::function<double(double, double, double)> func;
   bool compiled;
-  std::tie(compiled, func) = builder.build<double, double, double, double>(py_func);
+  std::tie(compiled, func) = builder.build<double(double, double, double)>(py_func);
   BOOST_CHECK(compiled);
 
   std::vector<std::unique_ptr<Worker>> workers;
@@ -123,7 +123,7 @@ def with_conditional(x, y, z):
   auto py_func = main_namespace["with_conditional"];
   std::function<double(double, double, double)> func;
   bool compiled;
-  std::tie(compiled, func) = builder.build<double, double, double, double>(py_func);
+  std::tie(compiled, func) = builder.build<double(double, double, double)>(py_func);
 
   BOOST_CHECK(!compiled);
 
