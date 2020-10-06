@@ -48,15 +48,17 @@ struct RegisterNode {
    */
   template<typename To>
   static void defCastOperations(py::class_<Node<T>, boost::noncopyable>& node) {
+    /*
     node
-      .def("__add__", makeBinary<T, To, std::plus>("+"))
-      .def("__sub__", makeBinary<T, To, std::minus>("-"))
+      .def("__add__", makeFunction("+", std::plus<T>()))
+      .def("__sub__", makeFunction("-", std::minus<T>()))
       .def("__mul__", makeBinary<T, To, std::multiplies>("*"))
       .def("__truediv__", makeBinary<T, To, std::divides>("/"))
       .def("__radd__", makeBinary<T, To, std::plus>("+", true))
       .def("__rsub__", makeBinary<T, To, std::minus>("-", true))
       .def("__rmul__", makeBinary<T, To, std::multiplies>("*", true))
       .def("__rtruediv__", makeBinary<T, To, std::divides>("/", true));
+      */
   }
 
   /**
@@ -72,34 +74,34 @@ struct RegisterNode {
   static void specialized(py::class_<Node<Y>, boost::noncopyable>& node,
                           typename std::enable_if<std::is_floating_point<Y>::value>::type * = nullptr) {
     node
-      .def("__pow__", makeBinary<T, T, Pow>("^"))
-      .def("__rpow__", makeBinary<T, T, Pow>("^", true))
-      .def("__round__", makeUnary("round", Round<T>()))
-      .def("__abs__", makeUnary("abs", Abs<T>()));
+      .def("__pow__", makeFunction<T(T, T)>("^", Pow<T>()))
+      .def("__rpow__", makeFunction<T(T, T)>("^", Reversed<T>(Pow<T>())))
+      .def("__round__", makeFunction<T(T)>("round", Round<T>()))
+      .def("__abs__", makeFunction<T(T)>("abs", Abs<T>()));
 
     // Functions
     // When using numpy methods, numpy will delegate to these
     // Taken from here, although there are a bunch not implemented:
     // https://numpy.org/devdocs/reference/ufuncs.html
     node
-      .def("exp", makeUnary("exp", Exp<T>()))
-      .def("exp2", makeUnary("exp2", Exp2<T>()))
-      .def("log", makeUnary("log", Log<T>()))
-      .def("log2", makeUnary("log2", Log2<T>()))
-      .def("log10", makeUnary("log10", Log10<T>()))
-      .def("sqrt", makeUnary("sqrt", Sqrt<T>()))
-      .def("sin", makeUnary("sin", Sin<T>()))
-      .def("cos", makeUnary("cos", Cos<T>()))
-      .def("tan", makeUnary("tan", Tan<T>()))
-      .def("arcsin", makeUnary("arcsin", ArcSin<T>()))
-      .def("arccos", makeUnary("arccos", ArcCos<T>()))
-      .def("arctan", makeUnary("arctan", ArcTan<T>()))
-      .def("sinh", makeUnary("sinh", Sinh<T>()))
-      .def("cosh", makeUnary("cosh", Cosh<T>()))
-      .def("tanh", makeUnary("tanh", Tanh<T>()))
-      .def("arcsinh", makeUnary("arcsinh", ArcSinh<T>()))
-      .def("arccosh", makeUnary("arccosh", ArcCosh<T>()))
-      .def("arctanh", makeUnary("arctanh", ArcTanh<T>()));
+      .def("exp", makeFunction<T(T)>("exp", Exp<T>()))
+      .def("exp2", makeFunction<T(T)>("exp2", Exp2<T>()))
+      .def("log", makeFunction<T(T)>("log", Log<T>()))
+      .def("log2", makeFunction<T(T)>("log2", Log2<T>()))
+      .def("log10", makeFunction<T(T)>("log10", Log10<T>()))
+      .def("sqrt", makeFunction<T(T)>("sqrt", Sqrt<T>()))
+      .def("sin", makeFunction<T(T)>("sin", Sin<T>()))
+      .def("cos", makeFunction<T(T)>("cos", Cos<T>()))
+      .def("tan", makeFunction<T(T)>("tan", Tan<T>()))
+      .def("arcsin", makeFunction<T(T)>("arcsin", ArcSin<T>()))
+      .def("arccos", makeFunction<T(T)>("arccos", ArcCos<T>()))
+      .def("arctan", makeFunction<T(T)>("arctan", ArcTan<T>()))
+      .def("sinh", makeFunction<T(T)>("sinh", Sinh<T>()))
+      .def("cosh", makeFunction<T(T)>("cosh", Cosh<T>()))
+      .def("tanh", makeFunction<T(T)>("tanh", Tanh<T>()))
+      .def("arcsinh", makeFunction<T(T)>("arcsinh", ArcSinh<T>()))
+      .def("arccosh", makeFunction<T(T)>("arccosh", ArcCosh<T>()))
+      .def("arctanh", makeFunction<T(T)>("arctanh", ArcTanh<T>()));
   }
 
   /**
@@ -121,38 +123,38 @@ struct RegisterNode {
                           typename std::enable_if<std::is_integral<Y>::value &&
                                                   !std::is_same<Y, bool>::value>::type * = nullptr) {
     node
-      .def("__abs__", makeUnary("abs", Abs<T>()));
+      .def("__abs__", makeFunction<T(T)>("abs", Abs<T>()));
     // Upcast to double
+    /*
     defCastOperations<double>(node);
     node
-      .def("__pow__", makeBinary<T, double, Pow>("^"))
+      .def("__pow__", makeFunction<T>("^"))
       .def("__rpow__", makeBinary<T, double, Pow>("^", true));
+      */
   }
 
   static void general(py::class_<Node<T>, boost::noncopyable>& node) {
     // https://docs.python.org/3/reference/datamodel.html#basic-customization
-    // Same types
     node
-      .def("__lt__", makeBinary<T, T, std::less>("<"))
-      .def("__le__", makeBinary<T, T, std::less_equal>("<="))
-      .def("__eq__", makeBinary<T, T, std::equal_to>("=="))
-      .def("__ne__", makeBinary<T, T, std::not_equal_to>("!="))
-      .def("__gt__", makeBinary<T, T, std::greater>(">"))
-      .def("__ge__", makeBinary<T, T, std::greater_equal>(">="));
+      .def("__lt__", makeFunction<bool(T, T)>("<", std::less<T>()))
+      .def("__le__", makeFunction<bool(T, T)>("<=", std::less_equal<T>()))
+      .def("__eq__", makeFunction<bool(T, T)>("==", std::equal_to<T>()))
+      .def("__ne__", makeFunction<bool(T, T)>("!=", std::not_equal_to<T>()))
+      .def("__gt__", makeFunction<bool(T, T)>(">", std::greater<T>()))
+      .def("__ge__", makeFunction<bool(T, T)>(">=", std::greater_equal<T>()));
 
     // https://docs.python.org/3/reference/datamodel.html#emulating-numeric-types
-    // Same types
     node
-      .def("__add__", makeBinary<T, T, std::plus>("+"))
-      .def("__sub__", makeBinary<T, T, std::minus>("-"))
-      .def("__mul__", makeBinary<T, T, std::multiplies>("*"))
-      .def("__truediv__", makeBinary<T, T, std::divides>("/"))
-      .def("__radd__", makeBinary<T, T, std::plus>("+", true))
-      .def("__rsub__", makeBinary<T, T, std::minus>("-", true))
-      .def("__rmul__", makeBinary<T, T, std::multiplies>("*", true))
-      .def("__rtruediv__", makeBinary<T, T, std::divides>("/", true))
-      .def("__neg__", makeUnary("-", std::function<T(T)>(std::negate<T>())))
-      .def("__pos__", makeUnary("+", std::function<T(T)>(Identity<T>())));
+      .def("__add__", makeFunction<T(T, T)>("+", std::plus<T>()))
+      .def("__sub__", makeFunction<T(T, T)>("-", std::minus<T>()))
+      .def("__mul__", makeFunction<T(T, T)>("*", std::multiplies<T>()))
+      .def("__truediv__", makeFunction<T(T, T)>("/", std::divides<T>()))
+      .def("__radd__", makeFunction<T(T, T)>("+", Reversed<T>(std::plus<T>())))
+      .def("__rsub__", makeFunction<T(T, T)>("-", Reversed<T>(std::minus<T>())))
+      .def("__rmul__", makeFunction<T(T, T)>("*", Reversed<T>(std::multiplies<T>())))
+      .def("__rtruediv__", makeFunction<T(T, T)>("/", Reversed<T>(std::divides<T>())))
+      .def("__neg__", makeFunction<T(T)>("-", std::negate<T>()))
+      .def("__pos__", makeFunction<T(T)>("+", (Identity<T>())));
 
     // Can not be used in conditionals!
     node.def("__bool__", py::make_function(
@@ -195,10 +197,10 @@ BOOST_PYTHON_MODULE (libPyston) {
   RegisterNode<bool>::Do();
 
   // Vector types
-  py::class_<std::vector<double> >("_DoubleVector")
+  py::class_<std::vector<double>>("_DoubleVector")
     .def(py::vector_indexing_suite<std::vector<double>>());
 
-  py::class_<std::vector<int64_t> >("_IntVector")
+  py::class_<std::vector<int64_t>>("_IntVector")
     .def(py::vector_indexing_suite<std::vector<int64_t>>());
 }
 

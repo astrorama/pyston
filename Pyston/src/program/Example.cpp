@@ -242,7 +242,7 @@ public:
         auto main_namespace = main_module.attr("__dict__");
 
         ExpressionTreeBuilder builder;
-        builder.registerFunction<double, World2Pix>("world2pix");
+        builder.registerFunction<double(double)>("world2pix", World2Pix<double>());
 
         py::exec_file(pyfile.native().c_str(), main_namespace);
       }

@@ -104,9 +104,7 @@ private:
 } // end of namespace Pyston
 
 #define PYSTON_EXPRESSIONTREEBUILDER_IMPL
-
 #include "Pyston/_impl/ExpressionTreeBuilder.icpp"
-
 #undef PYSTON_EXPRESSIONTREEBUILDER_IMPL
 
 #endif //PYSTON_EXPRESSIONTREEBUILDER_H

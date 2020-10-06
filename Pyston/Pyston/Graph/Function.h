@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef PYSTON_UNARYOPERATOR_H
-#define PYSTON_UNARYOPERATOR_H
+#ifndef PYSTON_FUNCTION_H
+#define PYSTON_FUNCTION_H
 
 #include "Node.h"
 #include <functional>
@@ -34,9 +34,12 @@ namespace Pyston {
  * @tparam T
  *  Operator parameter type
  */
-template<typename R, typename T>
-class UnaryOperator : public Node<R> {
+template<typename R, typename... Args>
+class Function : public Node<R> {
 public:
+  using functor_t = std::function<R(const Context&, Args...)>;
+  using children_t = std::tuple<std::shared_ptr<Node<Args>>...>;
+
   /**
    * Constructor
    * @param node
@@ -46,13 +49,9 @@ public:
    * @param repr
    *    Human readable representation of the functor (i.e. +, -, abs, exp, ...)
    */
-  UnaryOperator(const std::shared_ptr<Node < T>>
-
-  & node,
-  std::function<R(const Context&, T)> functor,
-  const std::string& repr
-  )
-  : m_node{ node }, m_functor{ functor }, m_repr{ repr } {}
+  Function(const std::string& repr, std::function<R(const Context&, Args...)> functor,
+           const std::shared_ptr<Node<Args>>... args)
+  : m_repr{repr}, m_functor{functor}, m_children{args...} {}
 
   /**
    * @copydoc Node::repr
@@ -64,31 +63,22 @@ public:
   /**
    * @copydoc Node::eval
    */
-  R eval(const Context& context, const Arguments& args) const final {
-    return m_functor(context, m_node->eval(context, args));
-  }
+  R eval(const Context& context, const Arguments& args) const final;
 
   /**
    * @copydoc Node::visit
    */
-  void visit(Visitor& visitor) const final {
-    visitor.enter(this);
-    m_node->visit(visitor);
-    visitor.exit(this);
-  }
+  void visit(Visitor& visitor) const final;
 
 private:
-  std::shared_ptr<Node < T>> m_node;
-  std::function<R(const Context&, T)> m_functor;
   std::string m_repr;
+  functor_t m_functor;
+  children_t m_children;
 };
 
-/**
 
- */
 template<typename Signature>
-class UnaryOperatorFactory;
-
+class FunctionFactory;
 
 /**
  * Specialization for functions that receive a context
@@ -98,9 +88,8 @@ class UnaryOperatorFactory;
  * @tparam T
  *  Type corresponding to the received Node
  */
-template<typename R, typename T>
-class UnaryOperatorFactory<R(const Context&, T)> {
-
+template<typename R, typename ...Args>
+class FunctionFactory<R(Args...)> {
 public:
   /**
    * Constructor
@@ -109,8 +98,8 @@ public:
    * @param repr
    *    Human readable representation of the operator
    */
-  UnaryOperatorFactory(std::function<R(const Context&, T)> functor, const std::string& repr)
-  : m_functor{functor}, m_repr{repr} {
+  FunctionFactory(const std::string& repr, std::function<R(const Context&, Args...)> functor)
+    : m_repr{repr}, m_functor{functor} {
   }
 
   /**
@@ -120,49 +109,19 @@ public:
    *    trigger a call `factory(a)`. Unlike the BinaryOperatorFactory, this will *not* be called
    *    is a is not of type Node, since there would be no reason to!
    */
-  std::shared_ptr<Node<R>> operator() (const std::shared_ptr<Node<T>>& node) const {
-    return std::make_shared<UnaryOperator<R, T>>(node, m_functor, m_repr);
+  std::shared_ptr<Node<R>> operator() (const std::shared_ptr<Node<Args>>&... nodes) const {
+    return std::make_shared<Function<R, Args...>>(m_repr, m_functor, nodes...);
   }
 
 protected:
-  UnaryOperatorFactory() {}
-
-  std::function<R(const Context&, T)> m_functor;
   std::string m_repr;
+  std::function<R(const Context&, Args...)> m_functor;
 };
-
-/**
- * Specialization for functions that only receive one parameter, we hide the context
- * from them
- *
- * @tparam R
- *  Type corresponding to the created new Node
- * @tparam T
- *  Type corresponding to the received Node
- */
-template<typename R, typename T>
-class UnaryOperatorFactory<R(T)> : public UnaryOperatorFactory<R(const Context&, T)> {
-public:
-  /**
-   * Constructor
-   * @param functor
-   *    The functor that will be passed down to the created UnaryOperator nodes
-   * @param repr
-   *    Human readable representation of the operator
-   */
-  UnaryOperatorFactory(std::function<R(T)> functor, const std::string& repr) {
-    m_repr = repr;
-    m_functor = [functor](const Context&, T v) {
-      return functor(v);
-    };
-  }
-
-protected:
-  using UnaryOperatorFactory<R(const Context&, T)>::m_functor;
-  using UnaryOperatorFactory<R(const Context&, T)>::m_repr;
-};
-
 
 } // end of namespace Pyston
 
-#endif //PYSTON_UNARYOPERATOR_H
+#define PYSTON_GRAPH_FUNCTION_IMPL
+#include "_impl/Function.icpp"
+#undef PYSTON_GRAPH_FUNCTION_IMPL
+
+#endif //PYSTON_FUNCTION_H

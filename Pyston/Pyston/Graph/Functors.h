@@ -27,8 +27,8 @@ namespace Pyston {
  * Convenience functor, used to attach a method for the unary '+' operator
  */
 template<typename T>
-struct Identity {
-  T operator()(T value) {
+struct Identity: public std::unary_function<T,T> {
+  T operator()(T value) const {
     return value;
   }
 };
@@ -45,8 +45,8 @@ struct Identity {
  *  A pointer to the function being wrapped
  */
 template<typename R, typename T, R(*wrapped)(T)>
-struct UnaryWrapper : public std::function<R(T)> {
-  R operator()(T value) {
+struct UnaryWrapper : public std::unary_function<T, R> {
+  R operator()(T value) const {
     return wrapped(value);
   }
 };
@@ -63,8 +63,8 @@ struct UnaryWrapper : public std::function<R(T)> {
  *  A pointer to the function being wrapped
  */
 template<typename R, typename T, R(*wrapped)(T, T)>
-struct BinaryWrapper {
-  R operator()(T left, T right) {
+struct BinaryWrapper : public std::binary_function<T, T, R> {
+  R operator()(T left, T right) const {
     return wrapped(left, right);
   }
 };
@@ -152,6 +152,20 @@ using ArcCosh = UnaryWrapper<T, T, std::acosh>;
 /// Wraps the hyperbolic arctan function
 template<typename T>
 using ArcTanh = UnaryWrapper<T, T, std::atanh>;
+
+/// Wraps a binary call, reversing the order of the arguments
+/// Useful for non associative operator override like __pow__ vs __rpow__
+template<typename T>
+struct Reversed : public std::binary_function<T, T, T> {
+  explicit Reversed(std::function<T(T,T)> functor) : m_functor{functor} {
+  }
+
+  T operator ()(T a, T b) const {
+    return m_functor(b, a);
+  }
+
+  std::function<T(T,T)> m_functor;
+};
 
 }
 
