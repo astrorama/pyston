@@ -130,7 +130,7 @@ public:
 
   template<typename ...Args>
   T eval(Args... args) const {
-    return eval(Context{}, std::forward<Args>(args)...);
+    return eval(Context{}, args...);
   }
 
 protected:

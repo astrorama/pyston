@@ -24,10 +24,10 @@ template<typename R, size_t N, typename ...Evaluated>
 struct FunctionEvalHelper {
   template<typename Functor, typename ChildrenSet>
   static R eval(const Context& context, const Arguments& args, const Functor& functor,
-                const ChildrenSet& children, Evaluated... evaluated) {
+                const ChildrenSet& children, Evaluated&&... evaluated) {
     auto a = std::get<N - 1>(children)->eval(context, args);
     return FunctionEvalHelper<R, N - 1, decltype(a), Evaluated...>::eval(
-      context, args, functor, children, a, evaluated...
+      context, args, functor, children, std::forward<decltype(a)>(a), std::forward<Evaluated>(evaluated)...
     );
   }
 };
@@ -36,8 +36,8 @@ template<typename R, typename... Evaluated>
 struct FunctionEvalHelper<R, 0, Evaluated...> {
   template<typename Functor, typename ChildrenSet>
   static R eval(const Context& context, const Arguments&, const Functor& functor,
-                const ChildrenSet&, Evaluated... evaluated) {
-    return functor(context, evaluated...);
+                const ChildrenSet&, Evaluated&&... evaluated) {
+    return functor(context, std::forward<Evaluated>(evaluated)...);
   }
 };
 

@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <boost/python.hpp>
+#include "Pyston/Graph/Cast.h"
 #include "Pyston/Graph/Function.h"
 
 namespace Pyston {
@@ -61,6 +62,37 @@ struct makeFunctionHelper<R(Args...)> {
   }
 };
 
+template<typename Signature>
+struct makeFunctionLeftCastHelper;
+
+/**
+ * Create a function factory that casts the left handside to the right handside type.
+ * This is useful when overriding operators between different types: i.e. int * float => float
+ * @tparam R
+ *  Return type
+ * @tparam LHS
+ *  Type of the left parameter
+ * @tparam RHS
+ *  Type of the right parameter
+ */
+template<typename R, typename LHS, typename RHS>
+struct makeFunctionLeftCastHelper<R(LHS, RHS)> {
+  static boost::python::object make(const std::string&repr, std::function<R(LHS, RHS)> functor) {
+    FunctionFactory<R(RHS, RHS)> factory(repr, [functor](const Context&, LHS l, RHS r) {
+      return functor(l, r);
+    });
+
+    return boost::python::make_function(
+      [factory](const std::shared_ptr<Node<LHS>>& left, const std::shared_ptr<Node<RHS>>&right) {
+        auto cast_left = std::make_shared<Cast<RHS, LHS>>(left);
+        return factory(cast_left, right);
+      },
+      boost::python::default_call_policies(),
+      boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<LHS>>&, const std::shared_ptr<Node<RHS>>&>()
+    );
+  }
+};
+
 
 /**
  * @details
@@ -81,6 +113,12 @@ template<typename Signature>
 static boost::python::object makeFunction(const std::string& repr,
                                           std::function<Signature> functor) {
   return makeFunctionHelper<Signature>::make(repr, functor);
+}
+
+template<typename Signature>
+static boost::python::object makeFunctionLeftCast(const std::string& repr,
+                                                  std::function<Signature> functor) {
+  return makeFunctionLeftCastHelper<Signature>::make(repr, functor);
 }
 
 }
