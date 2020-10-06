@@ -60,8 +60,8 @@ public:
   /**
    * @copydoc Node::eval
    */
-  R eval(const Arguments& args) const final {
-    return m_functor(m_node->eval(args));
+  R eval(const Context& context, const Arguments& args) const final {
+    return m_functor(m_node->eval(context, args));
   }
 
   /**

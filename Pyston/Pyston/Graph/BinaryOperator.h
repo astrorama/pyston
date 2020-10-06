@@ -61,8 +61,8 @@ public:
   /**
    * @copydoc Node::repr
    */
-  R eval(const Arguments& args) const final {
-    return m_functor(m_lval->eval(args), m_rval->eval(args));
+  R eval(const Context& context, const Arguments& args) const final {
+    return m_functor(m_lval->eval(context, args), m_rval->eval(context, args));
   }
 
   /**

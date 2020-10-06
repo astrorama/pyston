@@ -55,7 +55,7 @@ public:
    *    The type of the value assigned to the placeholder does not correspond to the
    *    expected type T
    */
-  T eval(const Arguments& args) const final {
+  T eval(const Context&, const Arguments& args) const final {
     return boost::get<T>(args.at(m_pos));
   }
 

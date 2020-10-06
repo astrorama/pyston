@@ -24,6 +24,7 @@
 #include <string>
 #include <typeindex>
 #include <vector>
+#include <boost/any.hpp>
 #include <boost/variant.hpp>
 
 namespace Pyston {
@@ -81,10 +82,15 @@ private:
 using Value = boost::variant<bool, int64_t, double>;
 
 /**
- * A dictionary where the key corresponds to the name placeholders have,
- * and the Value they are assigned.
+ * A vector where the values correspond to the position placeholders have,
+ * on the function call.
  */
 using Arguments = std::vector<Value>;
+
+/**
+ * Arbitrary key/value pairing for giving a context to function calls
+ */
+using Context = std::map<std::string, boost::any>;
 
 /**
  * A node on the computing tree, which has an associated primitive type
@@ -114,23 +120,28 @@ public:
    * @return
    *    Result of the evaluation
    */
-  virtual T eval(const Arguments&) const = 0;
+  virtual T eval(const Context&, const Arguments&) const = 0;
+
+  template<typename ...Args>
+  T eval(const Context& context, Args... args) const {
+    Arguments arguments;
+    return eval_helper(context, arguments, args...);
+  }
 
   template<typename ...Args>
   T eval(Args... args) const {
-    Arguments arguments;
-    return eval_helper(arguments, args...);
+    return eval(Context{}, std::forward<Args>(args)...);
   }
 
 protected:
-  T eval_helper(Arguments& arguments) const {
-    return eval(arguments);
+  T eval_helper(const Context& context, Arguments& arguments) const {
+    return eval(context, arguments);
   }
 
   template<typename A0, typename ...AN>
-  T eval_helper(Arguments& arguments, A0 v0, AN... an) const {
+  T eval_helper(const Context& context, Arguments& arguments, A0 v0, AN... an) const {
     arguments.push_back(v0);
-    return eval_helper(arguments, an...);
+    return eval_helper(context, arguments, an...);
   }
 };
 

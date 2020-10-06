@@ -50,7 +50,7 @@ public:
    * @note
    *    Obviously this node does nothing with the arguments
    */
-  T eval(const Arguments&) const final {
+  T eval(const Context&, const Arguments&) const final {
     return m_value;
   }
 

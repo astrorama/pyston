@@ -59,8 +59,8 @@ public:
   /**
    * @copydoc Node::eval
    */
-  To eval(const Arguments &args) const final {
-    return static_cast<To>(m_node->eval(args));
+  To eval(const Context& context, const Arguments& args) const final {
+    return static_cast<To>(m_node->eval(context, args));
   }
 
   /**

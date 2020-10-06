@@ -46,7 +46,7 @@ public:
     visitor.exit(this);
   }
 
-  T eval(const Arguments& arguments) const override {
+  T eval(const Context&, const Arguments& arguments) const override {
     GILLocker locker;
     try {
       boost::python::list py_args;
