@@ -58,38 +58,16 @@ public:
   }
 
   /**
-   * Register an unary function
-   * @tparam T
-   *    Parameter type
-   * @tparam Functor
-   *    Functor *type*
+   * Register a function
+   * @tparam Signature
+   *    Function signature
    * @param repr
    *    Function name
    * @note
-   *    The return type is deduced from the signature of Functor<T>::operator()
-   * @see
-   *    UnaryWrapper for wrapping regular functions
+   *    The return and parameter types are deduced from the Signature
    */
-  template<typename T, template<class> class Functor>
-  void registerFunction(const std::string& repr);
-
-  /**
-   * Register a binary function
-   * @tparam TL
-   *    Left parameter type
-   * @tparam TR
-   *    Right parameter type
-   * @tparam Functor
-   *    Functor *type*
-   * @param repr
-   *    Function name
-   * @note
-   *    The return type is deduced from the signature of Functor<TL, TR>::operator()
-   * @see
-   *    BinaryWrapper for wrapping regular functions
-   */
-  template<typename TL, typename TR, template<class> class Functor>
-  void registerFunction(const std::string& repr);
+  template<typename Signature>
+  void registerFunction(const std::string& repr, std::function<Signature> functor);
 
 private:
   template<unsigned pos>

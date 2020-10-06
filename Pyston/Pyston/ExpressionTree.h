@@ -46,8 +46,12 @@ public:
    * @param args
    *    Argument list
    */
+  R operator()(const Context& context, Args&&...args) {
+    return m_root->eval(context, std::forward<Args>(args)...);
+  }
+
   R operator()(Args&& ...args) {
-    return m_root->eval(std::forward<Args>(args)...);
+    return m_root->eval(Context{}, std::forward<Args>(args)...);
   }
 
   /**

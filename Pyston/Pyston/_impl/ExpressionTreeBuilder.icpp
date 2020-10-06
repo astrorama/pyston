@@ -46,22 +46,53 @@ ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::objec
   return ExpressionTree<R(Args...)>(compiled, root);
 }
 
-template<typename T, template<class> class Functor>
-void ExpressionTreeBuilder::registerFunction(const std::string& repr) {
-  auto ns = boost::python::import("pyston");
-  // Add the function for Nodes
-  auto function = makeUnary<T, Functor>(repr);
-  boost::python::objects::add_to_namespace(ns, repr.c_str(), function);
-  // Overload for the primitive types, so it can be evaluated even with non compilable expressions
-  typedef decltype(std::declval<Functor<T>>()(T())) R;
-  auto direct = boost::python::make_function(
-    Functor<T>(),
-    boost::python::default_call_policies(),
-    boost::mpl::vector<R, T>()
-  );
-  boost::python::objects::add_to_namespace(ns, repr.c_str(), direct);
+template<typename Signature>
+struct registerHelper;
+
+template<typename R, typename T>
+struct registerHelper<R(T)> {
+  static void registerFunction(const std::string& repr, std::function<R(T)> functor) {
+    auto ns = boost::python::import("pyston");
+    // Add the function for Nodes
+    auto function = makeUnary<R(T)>(repr, functor);
+    boost::python::objects::add_to_namespace(ns, repr.c_str(), function);
+
+    // Overload for the primitive types, so it can be evaluated even with non compilable expressions
+    auto direct = boost::python::make_function(
+      functor,
+      boost::python::default_call_policies(),
+      boost::mpl::vector<R, T>()
+    );
+    boost::python::objects::add_to_namespace(ns, repr.c_str(), direct);
+  }
+};
+
+template<typename R, typename T>
+struct registerHelper<R(const Context&, T)> {
+  static void registerFunction(const std::string& repr, std::function<R(const Context&,T)> functor) {
+    auto ns = boost::python::import("pyston");
+    // Add the function for Nodes
+    auto function = makeUnary<R(const Context&, T)>(repr, functor);
+    boost::python::objects::add_to_namespace(ns, repr.c_str(), function);
+
+    // Overload for the primitive types, so it can be evaluated even with non compilable expressions
+    auto direct = boost::python::make_function(
+      [functor](T v) {
+        return functor({}, v);
+      },
+      boost::python::default_call_policies(),
+      boost::mpl::vector<R, T>()
+    );
+    boost::python::objects::add_to_namespace(ns, repr.c_str(), direct);
+  }
+};
+
+template<typename Signature>
+void ExpressionTreeBuilder::registerFunction(const std::string& repr, std::function<Signature> functor) {
+  registerHelper<Signature>::registerFunction(repr, functor);
 }
 
+/*
 template<typename TL, typename TR, template<class> class Functor>
 void ExpressionTreeBuilder::registerFunction(const std::string& repr) {
   auto ns = boost::python::import("pyston");
@@ -78,5 +109,5 @@ void ExpressionTreeBuilder::registerFunction(const std::string& repr) {
   );
   boost::python::objects::add_to_namespace(ns, repr.c_str(), direct);
 }
-
+*/
 } // end of namespace Pyston

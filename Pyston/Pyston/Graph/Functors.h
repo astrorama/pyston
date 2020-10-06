@@ -45,7 +45,7 @@ struct Identity {
  *  A pointer to the function being wrapped
  */
 template<typename R, typename T, R(*wrapped)(T)>
-struct UnaryWrapper {
+struct UnaryWrapper : public std::function<R(T)> {
   R operator()(T value) {
     return wrapped(value);
   }

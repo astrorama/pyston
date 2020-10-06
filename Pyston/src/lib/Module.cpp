@@ -74,32 +74,32 @@ struct RegisterNode {
     node
       .def("__pow__", makeBinary<T, T, Pow>("^"))
       .def("__rpow__", makeBinary<T, T, Pow>("^", true))
-      .def("__round__", makeUnary<T, Round>("round"))
-      .def("__abs__", makeUnary<T, Abs>("abs"));
+      .def("__round__", makeUnary("round", Round<T>()))
+      .def("__abs__", makeUnary("abs", Abs<T>()));
 
     // Functions
     // When using numpy methods, numpy will delegate to these
     // Taken from here, although there are a bunch not implemented:
     // https://numpy.org/devdocs/reference/ufuncs.html
     node
-      .def("exp", makeUnary<T, Exp>("exp"))
-      .def("exp2", makeUnary<T, Exp2>("exp2"))
-      .def("log", makeUnary<T, Log>("log"))
-      .def("log2", makeUnary<T, Log2>("log2"))
-      .def("log10", makeUnary<T, Log10>("log10"))
-      .def("sqrt", makeUnary<T, Sqrt>("sqrt"))
-      .def("sin", makeUnary<T, Sin>("sin"))
-      .def("cos", makeUnary<T, Cos>("cos"))
-      .def("tan", makeUnary<T, Tan>("tan"))
-      .def("arcsin", makeUnary<T, ArcSin>("arcsin"))
-      .def("arccos", makeUnary<T, ArcCos>("arccos"))
-      .def("arctan", makeUnary<T, ArcTan>("arctan"))
-      .def("sinh", makeUnary<T, Sinh>("sinh"))
-      .def("cosh", makeUnary<T, Cosh>("cosh"))
-      .def("tanh", makeUnary<T, Tanh>("tanh"))
-      .def("arcsinh", makeUnary<T, ArcSinh>("arcsinh"))
-      .def("arccosh", makeUnary<T, ArcCosh>("arccosh"))
-      .def("arctanh", makeUnary<T, ArcTanh>("arctanh"));
+      .def("exp", makeUnary("exp", Exp<T>()))
+      .def("exp2", makeUnary("exp2", Exp2<T>()))
+      .def("log", makeUnary("log", Log<T>()))
+      .def("log2", makeUnary("log2", Log2<T>()))
+      .def("log10", makeUnary("log10", Log10<T>()))
+      .def("sqrt", makeUnary("sqrt", Sqrt<T>()))
+      .def("sin", makeUnary("sin", Sin<T>()))
+      .def("cos", makeUnary("cos", Cos<T>()))
+      .def("tan", makeUnary("tan", Tan<T>()))
+      .def("arcsin", makeUnary("arcsin", ArcSin<T>()))
+      .def("arccos", makeUnary("arccos", ArcCos<T>()))
+      .def("arctan", makeUnary("arctan", ArcTan<T>()))
+      .def("sinh", makeUnary("sinh", Sinh<T>()))
+      .def("cosh", makeUnary("cosh", Cosh<T>()))
+      .def("tanh", makeUnary("tanh", Tanh<T>()))
+      .def("arcsinh", makeUnary("arcsinh", ArcSinh<T>()))
+      .def("arccosh", makeUnary("arccosh", ArcCosh<T>()))
+      .def("arctanh", makeUnary("arctanh", ArcTanh<T>()));
   }
 
   /**
@@ -121,7 +121,7 @@ struct RegisterNode {
                           typename std::enable_if<std::is_integral<Y>::value &&
                                                   !std::is_same<Y, bool>::value>::type * = nullptr) {
     node
-      .def("__abs__", makeUnary<T, Abs>("abs"));
+      .def("__abs__", makeUnary("abs", Abs<T>()));
     // Upcast to double
     defCastOperations<double>(node);
     node
@@ -151,8 +151,8 @@ struct RegisterNode {
       .def("__rsub__", makeBinary<T, T, std::minus>("-", true))
       .def("__rmul__", makeBinary<T, T, std::multiplies>("*", true))
       .def("__rtruediv__", makeBinary<T, T, std::divides>("/", true))
-      .def("__neg__", makeUnary<T, std::negate>("-"))
-      .def("__pos__", makeUnary<T, Identity>("+"));
+      .def("__neg__", makeUnary("-", std::function<T(T)>(std::negate<T>())))
+      .def("__pos__", makeUnary("+", std::function<T(T)>(Identity<T>())));
 
     // Can not be used in conditionals!
     node.def("__bool__", py::make_function(

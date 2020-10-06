@@ -46,9 +46,13 @@ public:
    * @param repr
    *    Human readable representation of the functor (i.e. +, -, abs, exp, ...)
    */
-  UnaryOperator(const std::shared_ptr<Node<T>>& node, std::function<T(T)> functor,
-                const std::string& repr)
-    : m_node{node}, m_functor{functor}, m_repr{repr} {}
+  UnaryOperator(const std::shared_ptr<Node < T>>
+
+  & node,
+  std::function<R(const Context&, T)> functor,
+  const std::string& repr
+  )
+  : m_node{ node }, m_functor{ functor }, m_repr{ repr } {}
 
   /**
    * @copydoc Node::repr
@@ -61,7 +65,7 @@ public:
    * @copydoc Node::eval
    */
   R eval(const Context& context, const Arguments& args) const final {
-    return m_functor(m_node->eval(context, args));
+    return m_functor(context, m_node->eval(context, args));
   }
 
   /**
@@ -74,23 +78,29 @@ public:
   }
 
 private:
-  std::shared_ptr<Node<T>> m_node;
-  std::function<R(T)> m_functor;
+  std::shared_ptr<Node < T>> m_node;
+  std::function<R(const Context&, T)> m_functor;
   std::string m_repr;
 };
 
 /**
- * When a method implemented by a UnaryOperator is called in Python, we expect to
- * *create* an UnaryOperator node. This factory is a functor that is called when an
- * operator is called, builds up the corresponding UnaryOperator, and return it instead
- * of what normally would be a numerical evaluation
+
+ */
+template<typename Signature>
+class UnaryOperatorFactory;
+
+
+/**
+ * Specialization for functions that receive a context
+ *
  * @tparam R
  *  Type corresponding to the created new Node
  * @tparam T
  *  Type corresponding to the received Node
  */
 template<typename R, typename T>
-class UnaryOperatorFactory {
+class UnaryOperatorFactory<R(const Context&, T)> {
+
 public:
   /**
    * Constructor
@@ -99,8 +109,9 @@ public:
    * @param repr
    *    Human readable representation of the operator
    */
-  UnaryOperatorFactory(std::function<T(T)> functor, const std::string& repr)
-    : m_functor{functor}, m_repr{repr} {}
+  UnaryOperatorFactory(std::function<R(const Context&, T)> functor, const std::string& repr)
+  : m_functor{functor}, m_repr{repr} {
+  }
 
   /**
    * Callable that creates the Node
@@ -113,10 +124,44 @@ public:
     return std::make_shared<UnaryOperator<R, T>>(node, m_functor, m_repr);
   }
 
-private:
-  std::function<T(T)> m_functor;
+protected:
+  UnaryOperatorFactory() {}
+
+  std::function<R(const Context&, T)> m_functor;
   std::string m_repr;
 };
+
+/**
+ * Specialization for functions that only receive one parameter, we hide the context
+ * from them
+ *
+ * @tparam R
+ *  Type corresponding to the created new Node
+ * @tparam T
+ *  Type corresponding to the received Node
+ */
+template<typename R, typename T>
+class UnaryOperatorFactory<R(T)> : public UnaryOperatorFactory<R(const Context&, T)> {
+public:
+  /**
+   * Constructor
+   * @param functor
+   *    The functor that will be passed down to the created UnaryOperator nodes
+   * @param repr
+   *    Human readable representation of the operator
+   */
+  UnaryOperatorFactory(std::function<R(T)> functor, const std::string& repr) {
+    m_repr = repr;
+    m_functor = [functor](const Context&, T v) {
+      return functor(v);
+    };
+  }
+
+protected:
+  using UnaryOperatorFactory<R(const Context&, T)>::m_functor;
+  using UnaryOperatorFactory<R(const Context&, T)>::m_repr;
+};
+
 
 } // end of namespace Pyston
 

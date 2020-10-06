@@ -27,6 +27,33 @@
 
 namespace Pyston {
 
+template<typename Signature>
+struct makeUnaryHelper;
+
+template<typename R, typename T>
+struct makeUnaryHelper<R(T)> {
+  static boost::python::object make(const std::string& repr, std::function<R(T)> functor) {
+    auto op_factory = UnaryOperatorFactory<R(T)>(functor, repr);
+    return boost::python::make_function(
+      op_factory,
+      boost::python::default_call_policies(),
+      boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&>()
+    );
+  }
+};
+
+template<typename R, typename T>
+struct makeUnaryHelper<R(const Context&, T)> {
+  static boost::python::object make(const std::string& repr, std::function<R(const Context&, T)> functor) {
+    auto op_factory = UnaryOperatorFactory<R(const Context&, T)>(functor, repr);
+    return boost::python::make_function(
+      op_factory,
+      boost::python::default_call_policies(),
+      boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&>()
+    );
+  }
+};
+
 /**
  * @details
  *  boost::python seems to have some trouble attaching functors as methods
@@ -44,15 +71,9 @@ namespace Pyston {
  * @return
  *  A callable python object
  */
-template<typename T, template<class> class Functor>
-static boost::python::object makeUnary(const std::string& repr) {
-  typedef decltype(std::declval<Functor<T>>()(T())) R;
-
-  return boost::python::make_function(
-    UnaryOperatorFactory<R, T>(Functor<T>(), repr),
-    boost::python::default_call_policies(),
-    boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&>()
-  );
+template<typename Signature>
+static boost::python::object makeUnary(const std::string& repr, std::function<Signature> functor) {
+  return makeUnaryHelper<Signature>::make(repr, functor);
 }
 
 /**

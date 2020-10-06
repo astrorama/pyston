@@ -115,16 +115,19 @@ def raises_exception(x, y, z):
 /**
  * Custom functions
  */
-double world2pixel(double x) {
-  return std::sin(x) * 10;
-}
+template<typename T>
+struct World2Pixel {
+  T operator()(const Context& context, T x) const {
+    double scale = 3.;
+    if (context.count("scale"))
+      scale = boost::any_cast<double>(context.at("scale"));
+    return std::sin(x) * scale;
+  }
+};
 
 double mishmash(double x, double y) {
   return std::asinh(x) - std::log(y / 2);
 }
-
-template<typename T>
-using World2Pixel = UnaryWrapper<T, T, world2pixel>;
 
 template<typename T>
 using Mismash = BinaryWrapper<T, T, mishmash>;
@@ -134,14 +137,14 @@ using Mismash = BinaryWrapper<T, T, mishmash>;
  */
 BOOST_FIXTURE_TEST_CASE(AddUnaryFunction_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  builder.registerFunction<double, World2Pixel>("world2pixel");
+  builder.registerFunction<double(const Context&, double)>("world2pixel", World2Pixel<double>());
 
   py::exec(R"PYCODE(
 def uses_function(x, y):
   return pyston.world2pixel(x + y)
 )PYCODE", main_namespace);
 
-  std::function<double(double, double)> transparent;
+  std::function<double(const Context&, double, double)> transparent;
   {
     auto py_func = main_namespace["uses_function"];
     auto tree = builder.build<double(double, double)>(py_func);
@@ -150,13 +153,50 @@ def uses_function(x, y):
     transparent = tree;
   }
 
-  double r = transparent(10, 20);
-  BOOST_CHECK_CLOSE(r, world2pixel(10 + 20), 1e-8);
+  double r = transparent({{"scale", 20.}}, 10, 20);
+  BOOST_CHECK_CLOSE(r, std::sin(30.) * 20, 1e-8);
+
+  r = transparent({{"scale", 5.4}}, 10, 20);
+  BOOST_CHECK_CLOSE(r, std::sin(30.) * 5.4, 1e-8);
+}
+
+/**
+ * Register an unaru function, evaluated directly via Python since there is
+ * a conditional
+ */
+BOOST_FIXTURE_TEST_CASE(AddUnaryFunctionNonCompilable_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+  builder.registerFunction<double(const Context&, double)>("world2pixel", World2Pixel<double>());
+
+  py::exec(R"PYCODE(
+def uses_function(x, y):
+  if y > x:
+    return pyston.world2pixel(x + y)
+  else:
+    return y
+)PYCODE", main_namespace);
+
+  std::function<double(const Context&, double, double)> transparent;
+  {
+    auto py_func = main_namespace["uses_function"];
+    auto tree = builder.build<double(double, double)>(py_func);
+    BOOST_CHECK(!tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
+  }
+
+  // TODO: Propagate context even through python
+  double r = transparent({{"scale", 20.}}, 10, 20);
+  BOOST_CHECK_CLOSE(r, std::sin(30.) * 3., 1e-8);
+
+  r = transparent({{"scale", 5.4}}, 20, 10);
+  BOOST_CHECK_CLOSE(r, 10., 1e-8);
 }
 
 /**
  * Register a binary function, evaluated within an Expression Tree
  */
+ /*
 BOOST_FIXTURE_TEST_CASE(AddBinaryFunction_test, PythonFixture) {
   ExpressionTreeBuilder builder;
   builder.registerFunction<double, double, Mismash>("mishmash");
@@ -178,11 +218,12 @@ def uses_function(x, y):
   double r = transparent(10, 20);
   BOOST_CHECK_CLOSE(r, mishmash(10 * 2, 20), 1e-8);
 }
-
+*/
 /**
  * Register a binary function, evaluated directly via Python since there is
  * a conditional
  */
+ /*
 BOOST_FIXTURE_TEST_CASE(AddBinaryFunctionNonCompilable_test, PythonFixture) {
   ExpressionTreeBuilder builder;
   builder.registerFunction<double, double, Mismash>("mishmash");
@@ -210,5 +251,5 @@ def uses_function(x, y):
   r = transparent(22, -1);
   BOOST_CHECK_EQUAL(r, -1.);
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()
