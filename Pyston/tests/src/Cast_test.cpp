@@ -60,15 +60,15 @@ BOOST_FIXTURE_TEST_CASE(OpFloatBool_test, PythonFixture) {
  * Cast a boolean to an integer (5 * bool), and the integer into a float (+y)
  */
 BOOST_FIXTURE_TEST_CASE(OpInt_test, PythonFixture) {
-  auto function = py::eval("lambda x, y: 5 * (x > 0.) + y", main_namespace);
+  auto function = py::eval("lambda x, y: (5 * (x > 0.)) / y", main_namespace);
   auto X = std::make_shared<Placeholder<double>>(0);
   auto Y = std::make_shared<Placeholder<double>>(1);
 
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 7.);
-  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 2.);
+  BOOST_CHECK_CLOSE(comp()->eval(4., 2.), 2.5, 1e-8);
+  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
 }
 
 /**
@@ -76,15 +76,15 @@ BOOST_FIXTURE_TEST_CASE(OpInt_test, PythonFixture) {
  * Operators are reverse to test the cast is done properly regardless
  */
 BOOST_FIXTURE_TEST_CASE(OpIntReversed_test, PythonFixture) {
-  auto function = py::eval("lambda x, y: y + (x > 0.) * 5", main_namespace);
+  auto function = py::eval("lambda x, y: y / ((x > 0.) * 5)", main_namespace);
   auto X = std::make_shared<Placeholder<double>>(0);
   auto Y = std::make_shared<Placeholder<double>>(1);
 
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 7.);
-  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 2.);
+  BOOST_CHECK_CLOSE(comp()->eval(4., 2.), 0.4, 1e-8);
+  BOOST_CHECK(std::isinf(comp()->eval(-4., 2.)));
 }
 
 /**
