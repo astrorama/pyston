@@ -66,34 +66,31 @@ template<typename Signature>
 struct makeBinaryFunctionHelper;
 
 /**
- * Create a function factory that casts the left handside to the right handside type.
- * Allow the reversal or arguments (i.e. for __rmul__)
- * This is useful when overriding operators between different types: i.e. int * float => float
+ * Function factory specifically for binary functions, with the additional option to reverse
+ * them
  * @tparam R
  *  Return type
- * @tparam LHS
- *  Type of the left parameter
- * @tparam RHS
- *  Type of the right parameter
+ * @tparam T
+ *  Type of the parameter
  */
-template<typename R, typename LHS, typename RHS>
-struct makeBinaryFunctionHelper<R(LHS, RHS)> {
+template<typename R, typename T>
+struct makeBinaryFunctionHelper<R(T, T)> {
 
-  static boost::python::object make(const std::string& repr, std::function<R(RHS,RHS)> functor,
+  static boost::python::object make(const std::string& repr, std::function<R(T,T)> functor,
                                     bool reversed) {
-    FunctionFactory<R(RHS, RHS)> factory(repr, [functor](const Context&, RHS l, RHS r) {
+    FunctionFactory<R(T, T)> factory(repr, [functor](const Context&, T l, T r) {
       return functor(l, r);
     });
 
     return boost::python::make_function(
-      [factory, reversed](const std::shared_ptr<Node<RHS>>& left,
-                          const std::shared_ptr<Node<RHS>>& right) {
+      [factory, reversed](const std::shared_ptr<Node<T>>& left,
+                          const std::shared_ptr<Node<T>>& right) {
         if (reversed)
           return factory(right, left);
         return factory(left, right);
       },
       boost::python::default_call_policies(),
-      boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<RHS>>&, const std::shared_ptr<Node<RHS>>&>()
+      boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&, const std::shared_ptr<Node<T>>&>()
     );
   }
 };
@@ -128,9 +125,6 @@ static boost::python::object makeFunction(const std::string& repr,
  *  be done by NodeConverter
  * @tparam Signature
  *  Signature of the functor that receives two parameters *of the same type*
- * @tparam Functor
- *  Type of the functor, which does *not* match the signature, but rather
- *  R(RHS,RHS). The LHS operator will be upcasted if needed.
  * @param repr
  *  Literal representation of the node, for pretty-printing
  * @param functor
@@ -138,9 +132,9 @@ static boost::python::object makeFunction(const std::string& repr,
  * @return
  *  A callable python object
  */
-template<typename Signature, typename Functor>
+template<typename Signature>
 static boost::python::object makeBinaryFunction(const std::string& repr,
-                                                Functor functor, bool reversed = false) {
+                                                std::function<Signature> functor, bool reversed = false) {
   return makeBinaryFunctionHelper<Signature>::make(repr, functor, reversed);
 }
 

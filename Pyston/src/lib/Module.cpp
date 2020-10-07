@@ -48,14 +48,14 @@ struct RegisterNode {
   template<typename To>
   static void defCastOperations(py::class_<Node<T>, boost::noncopyable>& node) {
     node
-      .def("__add__", makeBinaryFunction<To(T, To)>("+", std::plus<To>()))
-      .def("__sub__", makeBinaryFunction<To(T, To)>("-", std::minus<To>()))
-      .def("__mul__", makeBinaryFunction<To(T, To)>("*", std::multiplies<To>()))
-      .def("__truediv__", makeBinaryFunction<To(T, To)>("/", std::divides<To>()))
-      .def("__radd__", makeBinaryFunction<To(T, To)>("+", std::plus<To>(), true))
-      .def("__rsub__", makeBinaryFunction<To(T, To)>("-", std::minus<To>(), true))
-      .def("__rmul__", makeBinaryFunction<To(T, To)>("x", std::multiplies<To>(), true))
-      .def("__rtruediv__", makeBinaryFunction<To(T, To)>("/", std::divides<To>(), true));
+      .def("__add__", makeBinaryFunction<To(To, To)>("+", std::plus<To>()))
+      .def("__sub__", makeBinaryFunction<To(To, To)>("-", std::minus<To>()))
+      .def("__mul__", makeBinaryFunction<To(To, To)>("*", std::multiplies<To>()))
+      .def("__truediv__", makeBinaryFunction<To(To, To)>("/", std::divides<To>()))
+      .def("__radd__", makeBinaryFunction<To(To, To)>("+", std::plus<To>(), true))
+      .def("__rsub__", makeBinaryFunction<To(To, To)>("-", std::minus<To>(), true))
+      .def("__rmul__", makeBinaryFunction<To(To, To)>("x", std::multiplies<To>(), true))
+      .def("__rtruediv__", makeBinaryFunction<To(To, To)>("/", std::divides<To>(), true));
   }
 
   /**
@@ -122,10 +122,10 @@ struct RegisterNode {
     node
       .def("__abs__", makeFunction<T(T)>("abs", Abs<T>()));
     // Upcast to double
-//    defCastOperations<double>(node);
+    defCastOperations<double>(node);
     node
-      .def("__pow__", makeBinaryFunction<double(Y, double)>("^", Pow<double>()))
-      .def("__rpow__", makeBinaryFunction<double(double, Y)>("^", Pow<double>(), true));
+      .def("__pow__", makeBinaryFunction<double(double, double)>("^", Pow<double>()))
+      .def("__rpow__", makeBinaryFunction<double(double, double)>("^", Pow<double>(), true));
   }
 
   static void general(py::class_<Node<T>, boost::noncopyable>& node) {
