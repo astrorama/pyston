@@ -158,7 +158,7 @@ def uses_function(x, y):
 }
 
 /**
- * Register an unaru function, evaluated directly via Python since there is
+ * Register an unary function, evaluated directly via Python since there is
  * a conditional
  */
 BOOST_FIXTURE_TEST_CASE(AddUnaryFunctionNonCompilable_test, PythonFixture) {
@@ -182,9 +182,8 @@ def uses_function(x, y):
     transparent = tree;
   }
 
-  // TODO: Propagate context even through python
   double r = transparent({{"scale", 20.}}, 10, 20);
-  BOOST_CHECK_CLOSE(r, std::sin(30.) * 3., 1e-8);
+  BOOST_CHECK_CLOSE(r, std::sin(30.) * 20., 1e-8);
 
   r = transparent({{"scale", 5.4}}, 20, 10);
   BOOST_CHECK_CLOSE(r, 10., 1e-8);

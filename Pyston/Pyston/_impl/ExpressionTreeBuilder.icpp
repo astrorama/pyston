@@ -17,6 +17,7 @@
  */
 
 #include "Pyston/Graph/PythonCall.h"
+#include "Pyston/SharedContext.h"
 
 #ifdef PYSTON_EXPRESSIONTREEBUILDER_IMPL
 
@@ -51,6 +52,9 @@ ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::objec
 template<typename Signature>
 struct registerHelper;
 
+/**
+ * Register a function that does not receive a context
+ */
 template<typename R, typename... Args>
 struct registerHelper<R(Args...)> {
   static void registerFunction(const std::string& repr, std::function<R(Args...)> functor) {
@@ -69,6 +73,9 @@ struct registerHelper<R(Args...)> {
   }
 };
 
+/**
+ * Register a function that receives a Context as first parameter
+ */
 template<typename R, typename... Args>
 struct registerHelper<R(const Context&, Args...)> {
   static void registerFunction(const std::string& repr, std::function<R(const Context&, Args...)> functor) {
@@ -80,7 +87,8 @@ struct registerHelper<R(const Context&, Args...)> {
     // Overload for the primitive types, so it can be evaluated even with non compilable expressions
     auto direct = boost::python::make_function(
       [functor](Args... v) {
-        return functor({}, v...);
+        // Since this function needs a context, we pass along the global one
+        return functor(sharedContext, v...);
       },
       boost::python::default_call_policies(),
       boost::mpl::vector<R, Args...>()

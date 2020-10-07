@@ -22,6 +22,7 @@
 #include "Node.h"
 #include "Pyston/Exceptions.h"
 #include "Pyston/GIL.h"
+#include "Pyston/SharedContext.h"
 #include <boost/python/object.hpp>
 #include <boost/python/tuple.hpp>
 
@@ -46,8 +47,9 @@ public:
     visitor.exit(this);
   }
 
-  T eval(const Context&, const Arguments& arguments) const override {
+  T eval(const Context& context, const Arguments& arguments) const override {
     GILLocker locker;
+    sharedContext = context;
     try {
       boost::python::list py_args;
       for (auto& a :arguments) {
