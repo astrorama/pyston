@@ -34,8 +34,8 @@ public:
 
   /**
    * Constructor
-   * @param name
-   *    Name of the Placeholder. It will be used to retrieve later the value assigned to it.
+   * @param pos
+   *    Position of the Placeholder. It will be used to retrieve later the value assigned to it.
    */
   explicit Placeholder(const unsigned pos) : m_pos{pos} {
   }

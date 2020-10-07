@@ -35,16 +35,11 @@ BOOST_FIXTURE_TEST_CASE(OpBoolFloat_test, PythonFixture) {
   auto X = std::make_shared<Placeholder<double>>(0);
   auto Y = std::make_shared<Placeholder<double>>(1);
 
-  try {
-    auto py_comp = function(X, Y);
-    py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
+  auto py_comp = function(X, Y);
+  py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-    BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 2.);
-    BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
-  }
-  catch (const py::error_already_set) {
-    throw Exception();
-  }
+  BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 2.);
+  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
 }
 
 /**

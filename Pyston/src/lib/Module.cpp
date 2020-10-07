@@ -25,6 +25,7 @@
 #include "Pyston/Graph/Constant.h"
 #include "Pyston/Graph/Functors.h"
 #include "Pyston/Graph/Placeholder.h"
+#include "Pyston/Graph/AttributeSet.h"
 
 #if BOOST_VERSION < 105600
 #include <boost/units/detail/utility.hpp>
@@ -186,10 +187,48 @@ struct RegisterNode {
   }
 };
 
+/**
+ * Allow to use AttributeSet directly from Python
+ */
+struct VariantToPython : public boost::static_visitor<boost::python::object> {
+  template<typename Content>
+  py::object operator()(Content c) const {
+    return py::object(c);
+  }
+};
+
+py::object attributeSetGetter(const AttributeSet& attr_set, const std::string& name) {
+  auto value = attr_set.at(name);
+  return boost::apply_visitor(VariantToPython(), value);
+}
+
+/**
+ * Register the attribute set placeholder
+ */
+void RegisterAttributeSet() {
+  py::class_<Placeholder<AttributeSet>, boost::noncopyable> node("AttributeSet", "AST Node", py::no_init);
+
+  // Register convertion between shared pointer and Node
+  py::register_ptr_to_python<std::shared_ptr<Placeholder<AttributeSet>>>();
+
+  // Register __getattr__
+  node
+  .def("__getattr__", &Placeholder<AttributeSet>::get);
+
+  // Register AttributeSet so it can be used directly from Python for
+  // non-compiled expressions
+  py::class_<AttributeSet> attr_set("AttributeSet", "Attribute set", py::no_init);
+  attr_set
+  .def("__getattr__", &attributeSetGetter);
+}
+
 BOOST_PYTHON_MODULE (libPyston) {
   RegisterNode<double>::Do();
   RegisterNode<int64_t>::Do();
   RegisterNode<bool>::Do();
+
+  // AttributeSet is a bit special
+  RegisterAttributeSet();
 
   // Vector types
   py::class_<std::vector<double>>("_DoubleVector")

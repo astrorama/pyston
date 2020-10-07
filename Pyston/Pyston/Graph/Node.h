@@ -77,9 +77,15 @@ private:
 };
 
 /**
+ * Arbitrary key/value pairs, interpreted as an object attribute
+ */
+using Attribute = boost::variant<bool, int64_t, double>;
+using AttributeSet = std::map<std::string, Attribute>;
+
+/**
  * Can hold any values a Placeholder may require
  */
-using Value = boost::variant<bool, int64_t, double>;
+using Value = boost::variant<bool, int64_t, double, AttributeSet>;
 
 /**
  * A vector where the values correspond to the position placeholders have,

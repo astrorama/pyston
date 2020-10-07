@@ -67,6 +67,9 @@ elements_add_executable(Example src/program/Example.cpp
 #                       INCLUDE_DIRS ElementsExamples
 #                       LINK_LIBRARIES ElementsExamples TYPE Boost)
 #===============================================================================
+elements_add_unit_test(AttributeSetTest tests/src/AttributeSet_test.cpp
+        LINK_LIBRARIES Pyston
+        TYPE Boost)
 elements_add_unit_test(BinaryOperatorTest tests/src/BinaryOperator_test.cpp
         LINK_LIBRARIES Pyston
         TYPE Boost)
