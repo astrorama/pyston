@@ -24,6 +24,7 @@
 #include <boost/python/import.hpp>
 #include <boost/python/exec.hpp>
 #include <boost/python/extract.hpp>
+#include <Pyston/Util/GraphvizGenerator.h>
 #include "Pyston/Module.h"
 #include "Pyston/Util/TextReprVisitor.h"
 

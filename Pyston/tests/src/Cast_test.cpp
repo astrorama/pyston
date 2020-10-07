@@ -17,6 +17,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
+#include <Pyston/Exceptions.h>
 #include "Pyston/Graph/Node.h"
 #include "Pyston/Graph/Placeholder.h"
 #include "PythonFixture.h"
@@ -34,11 +35,16 @@ BOOST_FIXTURE_TEST_CASE(OpBoolFloat_test, PythonFixture) {
   auto X = std::make_shared<Placeholder<double>>(0);
   auto Y = std::make_shared<Placeholder<double>>(1);
 
-  auto py_comp = function(X, Y);
-  py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
+  try {
+    auto py_comp = function(X, Y);
+    py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
-  BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 2.);
-  BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
+    BOOST_CHECK_EQUAL(comp()->eval(4., 2.), 2.);
+    BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);
+  }
+  catch (const py::error_already_set) {
+    throw Exception();
+  }
 }
 
 /**
@@ -66,6 +72,8 @@ BOOST_FIXTURE_TEST_CASE(OpInt_test, PythonFixture) {
 
   auto py_comp = function(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
+
+  BOOST_TEST_MESSAGE(textRepr(comp()));
 
   BOOST_CHECK_CLOSE(comp()->eval(4., 2.), 2.5, 1e-8);
   BOOST_CHECK_EQUAL(comp()->eval(-4., 2.), 0.);

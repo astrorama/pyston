@@ -37,7 +37,6 @@ namespace py = boost::python;
 
 namespace Pyston {
 
-
 template<typename T>
 struct RegisterNode {
 
@@ -49,14 +48,14 @@ struct RegisterNode {
   template<typename To>
   static void defCastOperations(py::class_<Node<T>, boost::noncopyable>& node) {
     node
-      .def("__add__", makeFunctionLeftCast<To(T, To)>("+", std::plus<To>()))
-      .def("__sub__", makeFunctionLeftCast<To(T, To)>("-", std::minus<To>()))
-      .def("__mul__", makeFunctionLeftCast<To(T, To)>("*", std::multiplies<To>()))
-      .def("__truediv__", makeFunctionLeftCast<To(T, To)>("/", std::divides<To>()))
-      .def("__radd__", makeFunctionLeftCast<To(T, To)>("+", Reversed<To>(std::plus<To>())))
-      .def("__rsub__", makeFunctionLeftCast<To(T, To)>("-", Reversed<To>(std::minus<To>())))
-      .def("__rmul__", makeFunctionLeftCast<To(T, To)>("*", Reversed<To>(std::multiplies<To>())))
-      .def("__rtruediv__", makeFunctionLeftCast<To(T, To)>("/", Reversed<To>(std::divides<To>())));
+      .def("__add__", makeBinaryFunction<To(T, To)>("+", std::plus<To>()))
+      .def("__sub__", makeBinaryFunction<To(T, To)>("-", std::minus<To>()))
+      .def("__mul__", makeBinaryFunction<To(T, To)>("*", std::multiplies<To>()))
+      .def("__truediv__", makeBinaryFunction<To(T, To)>("/", std::divides<To>()))
+      .def("__radd__", makeBinaryFunction<To(T, To)>("+", std::plus<To>(), true))
+      .def("__rsub__", makeBinaryFunction<To(T, To)>("-", std::minus<To>(), true))
+      .def("__rmul__", makeBinaryFunction<To(T, To)>("x", std::multiplies<To>(), true))
+      .def("__rtruediv__", makeBinaryFunction<To(T, To)>("/", std::divides<To>(), true));
   }
 
   /**
@@ -73,7 +72,7 @@ struct RegisterNode {
                           typename std::enable_if<std::is_floating_point<Y>::value>::type * = nullptr) {
     node
       .def("__pow__", makeFunction<T(T, T)>("^", Pow<T>()))
-      .def("__rpow__", makeFunction<T(T, T)>("^", Reversed<T>(Pow<T>())))
+      .def("__rpow__", makeBinaryFunction<T(T, T)>("^", Pow<T>(), true))
       .def("__round__", makeFunction<T(T)>("round", Round<T>()))
       .def("__abs__", makeFunction<T(T)>("abs", Abs<T>()));
 
@@ -123,10 +122,10 @@ struct RegisterNode {
     node
       .def("__abs__", makeFunction<T(T)>("abs", Abs<T>()));
     // Upcast to double
-    defCastOperations<double>(node);
+//    defCastOperations<double>(node);
     node
-      .def("__pow__", makeFunctionLeftCast<double(Y, double)>("^", Pow<double>()))
-      .def("__rpow__", makeFunctionLeftCast<double(double, Y)>("^", Reversed<double>(Pow<double>())));
+      .def("__pow__", makeBinaryFunction<double(Y, double)>("^", Pow<double>()))
+      .def("__rpow__", makeBinaryFunction<double(double, Y)>("^", Pow<double>(), true));
   }
 
   static void general(py::class_<Node<T>, boost::noncopyable>& node) {
@@ -145,10 +144,10 @@ struct RegisterNode {
       .def("__sub__", makeFunction<T(T, T)>("-", std::minus<T>()))
       .def("__mul__", makeFunction<T(T, T)>("*", std::multiplies<T>()))
       .def("__truediv__", makeFunction<T(T, T)>("/", std::divides<T>()))
-      .def("__radd__", makeFunction<T(T, T)>("+", Reversed<T>(std::plus<T>())))
-      .def("__rsub__", makeFunction<T(T, T)>("-", Reversed<T>(std::minus<T>())))
-      .def("__rmul__", makeFunction<T(T, T)>("*", Reversed<T>(std::multiplies<T>())))
-      .def("__rtruediv__", makeFunction<T(T, T)>("/", Reversed<T>(std::divides<T>())))
+      .def("__radd__", makeBinaryFunction<T(T, T)>("+", std::plus<T>(), true))
+      .def("__rsub__", makeBinaryFunction<T(T, T)>("-", std::minus<T>(), true))
+      .def("__rmul__", makeBinaryFunction<T(T, T)>("*", std::multiplies<T>(), true))
+      .def("__rtruediv__", makeBinaryFunction<T(T, T)>("/", std::divides<T>(), true))
       .def("__neg__", makeFunction<T(T)>("-", std::negate<T>()))
       .def("__pos__", makeFunction<T(T)>("+", (Identity<T>())));
 

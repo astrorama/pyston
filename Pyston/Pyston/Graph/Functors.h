@@ -153,20 +153,6 @@ using ArcCosh = UnaryWrapper<T, T, std::acosh>;
 template<typename T>
 using ArcTanh = UnaryWrapper<T, T, std::atanh>;
 
-/// Wraps a binary call, reversing the order of the arguments
-/// Useful for non associative operator override like __pow__ vs __rpow__
-template<typename T>
-struct Reversed : public std::binary_function<T, T, T> {
-  explicit Reversed(std::function<T(T,T)> functor) : m_functor{functor} {
-  }
-
-  T operator ()(T a, T b) const {
-    return m_functor(b, a);
-  }
-
-  std::function<T(T,T)> m_functor;
-};
-
 }
 
 #endif //PYSTON_FUNCTORS_H
