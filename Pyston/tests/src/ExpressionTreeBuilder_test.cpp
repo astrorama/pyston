@@ -129,9 +129,6 @@ double mishmash(double x, double y) {
   return std::asinh(x) - std::log(y / 2);
 }
 
-template<typename T>
-using Mismash = BinaryWrapper<T, T, mishmash>;
-
 /**
  * Register a custom unary function, evaluated within an Expression Tree
  */
@@ -196,10 +193,9 @@ def uses_function(x, y):
 /**
  * Register a binary function, evaluated within an Expression Tree
  */
- /*
 BOOST_FIXTURE_TEST_CASE(AddBinaryFunction_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  builder.registerFunction<double, double, Mismash>("mishmash");
+  builder.registerFunction<double(double, double)>("mishmash", &mishmash);
 
   py::exec(R"PYCODE(
 def uses_function(x, y):
@@ -218,15 +214,14 @@ def uses_function(x, y):
   double r = transparent(10, 20);
   BOOST_CHECK_CLOSE(r, mishmash(10 * 2, 20), 1e-8);
 }
-*/
+
 /**
  * Register a binary function, evaluated directly via Python since there is
  * a conditional
  */
- /*
 BOOST_FIXTURE_TEST_CASE(AddBinaryFunctionNonCompilable_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  builder.registerFunction<double, double, Mismash>("mishmash");
+  builder.registerFunction<double(double, double)>("mishmash", &mishmash);
 
   py::exec(R"PYCODE(
 def uses_function(x, y):
@@ -251,5 +246,5 @@ def uses_function(x, y):
   r = transparent(22, -1);
   BOOST_CHECK_EQUAL(r, -1.);
 }
-*/
+
 BOOST_AUTO_TEST_SUITE_END()
