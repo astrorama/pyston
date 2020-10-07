@@ -30,6 +30,7 @@
 #include "Pyston/ExpressionTree.h"
 #include "Pyston/GIL.h"
 #include "Pyston/Graph/Placeholder.h"
+#include "Pyston/Graph/AttributeSet.h"
 #include "Pyston/Helpers.h"
 
 namespace Pyston {
@@ -48,13 +49,17 @@ public:
    *    Function signature (i.e. double(double,double))
    * @param pyfunc
    *    Python object pointing to a callable. Its signature must match the template.
+   * @param prototypes
+   *    List of prototype attribute sets *iff* the signature includes any. The same
+   *    order is expected
    * @return
    *    A pair, where the first value is a boolean set to `true` if an expression tree could
    *    be built, false otherwise. The second value is the wrapping functor.
    */
   template<typename Signature>
-  ExpressionTree<Signature> build(const boost::python::object& pyfunc) const {
-    return buildHelper<Signature>::build(pyfunc);
+  ExpressionTree<Signature> build(const boost::python::object& pyfunc,
+                                  const std::vector<AttributeSet>& prototypes = {}) const {
+    return buildHelper<Signature>::build(pyfunc, std::begin(prototypes));
   }
 
   /**
@@ -70,22 +75,6 @@ public:
   void registerFunction(const std::string& repr, std::function<Signature> functor);
 
 private:
-  template<unsigned pos>
-  static void placeholderHelper(boost::python::list&) {
-  }
-
-  template<unsigned pos, typename A0>
-  static void placeholderHelper(boost::python::list& placeholders) {
-    placeholders.append(std::make_shared<Placeholder<A0>>(pos));
-  }
-
-  template<unsigned pos, typename A0, typename A1, typename ...AN>
-  static void placeholderHelper(boost::python::list& placeholders) {
-    placeholders.append(std::make_shared<Placeholder<A0>>(pos));
-    placeholders.append(std::make_shared<Placeholder<A1>>(pos + 1));
-    placeholderHelper<pos + 2, AN...>(placeholders);
-  }
-
   /**
    * Required to support function signatures
    */
@@ -97,7 +86,8 @@ private:
    */
   template<typename R, typename... Args>
   struct buildHelper<R(Args...)> {
-    static ExpressionTree<R(Args...)> build(const boost::python::object& pyfunc);
+    static ExpressionTree<R(Args...)> build(const boost::python::object&,
+                                            std::vector<AttributeSet>::const_iterator);
   };
 };
 

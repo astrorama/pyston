@@ -23,18 +23,47 @@
 
 namespace Pyston {
 
+template<unsigned pos, typename...AN>
+struct placeholderHelper;
+
+template<unsigned pos, typename A0, typename... AN>
+struct placeholderHelper<pos, A0, AN...> {
+  static void append(boost::python::list& placeholders,
+                     std::vector<AttributeSet>::const_iterator ai) {
+    placeholders.append(std::make_shared<Placeholder<A0>>(boost::python::len(placeholders)));
+    placeholderHelper<pos - 1, AN...>::append(placeholders, ai);
+  }
+};
+
+template<unsigned pos, typename...AN>
+struct placeholderHelper<pos, AttributeSet, AN...> {
+  static void append(boost::python::list& placeholders,
+                     std::vector<AttributeSet>::const_iterator ai) {
+    placeholders.append(std::make_shared<Placeholder<AttributeSet>>(boost::python::len(placeholders), *ai));
+    placeholderHelper<pos - 1, AN...>::append(placeholders, ++ai);
+  }
+};
+
+template<>
+struct placeholderHelper<0> {
+  static void append(boost::python::list&, std::vector<AttributeSet>::const_iterator) {
+  }
+};
+
 template<typename R, typename... Args>
 ExpressionTree<R(Args...)>
-ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::object& pyfunc) {
+ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::object& pyfunc,
+                                                      std::vector<AttributeSet>::const_iterator ai) {
   GILLocker gil_ensure;
 
   std::shared_ptr<Node<R>> root;
   bool compiled;
+  std::shared_ptr<Exception> reason;
 
   // Try building a computing graph
   try {
     boost::python::list placeholders;
-    placeholderHelper<0, Args...>(placeholders);
+    placeholderHelper<sizeof...(Args), Args...>::append(placeholders, ai);
     auto py_comp = pyfunc(*boost::python::tuple(placeholders));
     root = boost::python::extract<std::shared_ptr<Node<R>>>(py_comp);
     compiled = true;
@@ -42,11 +71,12 @@ ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::objec
   // If failed to do so (i.e. placeholder used on a control flow),
   // wrap the call to python
   catch (const boost::python::error_already_set&) {
+    reason = std::make_shared<Exception>();
     PyErr_Clear();
     root = std::make_shared<PythonCall<R>>(pyfunc);
     compiled = false;
   }
-  return ExpressionTree<R(Args...)>(compiled, root);
+  return ExpressionTree<R(Args...)>(compiled, root, std::move(reason));
 }
 
 template<typename Signature>

@@ -65,6 +65,14 @@ public:
 
   /**
    * @return
+   *    If isCompiled is false, return the reason for it
+   */
+  const Exception* reason() const {
+    return m_reason.get();
+  }
+
+  /**
+   * @return
    *    The root of the expression tree
    */
   const std::shared_ptr<Node<R>>& getTree() const {
@@ -74,9 +82,11 @@ public:
 private:
   bool m_is_compiled;
   std::shared_ptr<Node<R>> m_root;
+  std::shared_ptr<Exception> m_reason;
 
-  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root)
-    : m_is_compiled(compiled), m_root(root) {
+  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root,
+                 const std::shared_ptr<Exception>& reason)
+    : m_is_compiled{compiled}, m_root{root}, m_reason{reason} {
   }
 
   friend class ExpressionTreeBuilder;

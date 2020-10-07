@@ -246,4 +246,59 @@ def uses_function(x, y):
   BOOST_CHECK_EQUAL(r, -1.);
 }
 
+/**
+ * Compile a function that receives an object
+ */
+BOOST_FIXTURE_TEST_CASE(WithObject_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+
+  auto py_func = py::eval("lambda o, y: np.log(o.flux) * y", main_namespace);
+  AttributeSet prototype{{"flux", 0.}};
+
+  std::function<double(AttributeSet, double)> transparent;
+  {
+    auto tree = builder.build<double(AttributeSet, double)>(py_func, {prototype});
+    BOOST_CHECK(tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
+  }
+
+  prototype["flux"] = 42.;
+  double r = transparent(prototype, 5);
+  BOOST_CHECK_CLOSE(r, 18.68835, 1e-4);
+}
+
+/**
+ * Non compilable function that receives an object
+ */
+BOOST_FIXTURE_TEST_CASE(WithObjectNonCompilable_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+
+  py::exec(R"PYCODE(
+def non_compilable(o, y):
+  if o.flux > 0:
+    return np.log(o.flux)
+  else:
+    return y
+)PYCODE", main_namespace);
+
+  AttributeSet prototype{{"flux", 0.}};
+  std::function<double(AttributeSet, double)> transparent;
+  {
+    auto py_func = main_namespace["non_compilable"];
+    auto tree = builder.build<double(AttributeSet, double)>(py_func, {prototype});
+    BOOST_CHECK(!tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
+  }
+
+  prototype["flux"] = 88.;
+  double r = transparent(prototype, 5);
+  BOOST_CHECK_CLOSE(r, 4.477337, 1e-4);
+
+  prototype["flux"] = -4.;
+  r = transparent(prototype, 5);
+  BOOST_CHECK_CLOSE(r, 5, 1e-8);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
