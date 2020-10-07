@@ -50,14 +50,12 @@ struct Worker {
   Worker(const Worker&) = delete;
 
   void run(void) {
-    BOOST_TEST_MESSAGE("Starting thread " << m_thread_id);
     for (int i = 0; i < NITERATIONS; ++i) {
       Evaluation evaluation;
       evaluation.result = m_functor(
         evaluation.params[0], evaluation.params[1], evaluation.params[2]);
       m_evaluations.emplace_back(evaluation);
     }
-    BOOST_TEST_MESSAGE("Stopping thread " << m_thread_id);
   }
 
   int m_thread_id;
