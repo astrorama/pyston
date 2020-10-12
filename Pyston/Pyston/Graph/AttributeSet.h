@@ -64,7 +64,11 @@ public:
    */
   T eval(const Context&, const Arguments& arguments) const override {
     auto& attr_set = boost::get<AttributeSet>(arguments[m_pos]);
-    return boost::get<T>(attr_set.at(m_name));
+    auto value_iter = attr_set.find(m_name);
+    if (value_iter == attr_set.end()) {
+      throw std::out_of_range("AttributeSet object has no attribute '" + m_name + "'");
+    }
+    return boost::get<T>(value_iter->second);
   }
 
 private:
@@ -102,7 +106,7 @@ public:
    */
   boost::python::object get(const std::string& name) const {
     if (m_attrs.count(name) == 0)
-      throw std::invalid_argument("AttributeSet object has no attribute '" + name + "'");
+      throw std::out_of_range("AttributeSet object has no attribute '" + name + "'");
     return boost::apply_visitor(AttrGetterFactory(m_pos, name), m_attrs.at(name));
   }
 
