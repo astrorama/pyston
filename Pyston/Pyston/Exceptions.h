@@ -53,7 +53,7 @@ public:
   const std::list<Location>& getTraceback() const;
 
   /// Log error message and traceback
-  void log(log4cpp::Priority::Value level, Elements::Logging& logger) const;
+  const Exception& log(log4cpp::Priority::Value level, Elements::Logging& logger) const;
 
 private:
   std::list<Location> m_traceback;

@@ -68,12 +68,13 @@ auto Exception::getTraceback() const -> const std::list<Location>& {
   return m_traceback;
 }
 
-void Exception::log(log4cpp::Priority::Value level, Elements::Logging& logger) const {
+const Exception& Exception::log(log4cpp::Priority::Value level, Elements::Logging& logger) const {
   for (auto& trace : m_traceback) {
     std::stringstream msg;
     msg << "File \"" << trace.filename << "\", line " << trace.lineno << ", in " << trace.funcname;
     logger.log(level, msg.str());
   }
+  return *this;
 }
 
 } // end of namespace Pyston
