@@ -56,10 +56,9 @@ public:
    *    A pair, where the first value is a boolean set to `true` if an expression tree could
    *    be built, false otherwise. The second value is the wrapping functor.
    */
-  template<typename Signature>
-  ExpressionTree<Signature> build(const boost::python::object& pyfunc,
-                                  const std::vector<AttributeSet>& prototypes = {}) const {
-    return buildHelper<Signature>::build(pyfunc, std::begin(prototypes));
+  template<typename Signature, typename ...Prototypes>
+  ExpressionTree<Signature> build(const boost::python::object& pyfunc, Prototypes&&... proto) const {
+    return buildHelper<Signature>::build(pyfunc, std::forward<Prototypes>(proto)...);
   }
 
   /**
@@ -86,8 +85,8 @@ private:
    */
   template<typename R, typename... Args>
   struct buildHelper<R(Args...)> {
-    static ExpressionTree<R(Args...)> build(const boost::python::object&,
-                                            std::vector<AttributeSet>::const_iterator);
+    template<typename... Prototypes>
+    static ExpressionTree<R(Args...)> build(const boost::python::object&, Prototypes&&...);
   };
 };
 

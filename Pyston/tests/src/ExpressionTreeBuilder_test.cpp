@@ -134,7 +134,8 @@ double mishmash(double x, double y) {
  */
 BOOST_FIXTURE_TEST_CASE(AddUnaryFunction_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  builder.registerFunction<double(const Context&, double)>("world2pixel", World2Pixel<double>());
+  builder.registerFunction < double(
+  const Context&, double)>("world2pixel", World2Pixel<double>());
 
   py::exec(R"PYCODE(
 def uses_function(x, y):
@@ -163,7 +164,8 @@ def uses_function(x, y):
  */
 BOOST_FIXTURE_TEST_CASE(AddUnaryFunctionNonCompilable_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  builder.registerFunction<double(const Context&, double)>("world2pixel", World2Pixel<double>());
+  builder.registerFunction < double(
+  const Context&, double)>("world2pixel", World2Pixel<double>());
 
   py::exec(R"PYCODE(
 def uses_function(x, y):
@@ -257,7 +259,7 @@ BOOST_FIXTURE_TEST_CASE(WithObject_test, PythonFixture) {
 
   std::function<double(AttributeSet, double)> transparent;
   {
-    auto tree = builder.build<double(AttributeSet, double)>(py_func, {prototype});
+    auto tree = builder.build<double(AttributeSet, double)>(py_func, prototype);
     BOOST_CHECK(tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -286,7 +288,7 @@ def non_compilable(o, y):
   std::function<double(AttributeSet, double)> transparent;
   {
     auto py_func = main_namespace["non_compilable"];
-    auto tree = builder.build<double(AttributeSet, double)>(py_func, {prototype});
+    auto tree = builder.build<double(AttributeSet, double)>(py_func, prototype);
     BOOST_CHECK(!tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -312,7 +314,9 @@ BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
 
   std::function<double(const AttributeSet&, double)> transparent;
   {
-    auto tree = builder.build<double(const AttributeSet&, double)>(py_func, {prototype});
+    auto
+    tree = builder.build < double(
+    const AttributeSet&, double)>(py_func, prototype);
     BOOST_CHECK(tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -322,5 +326,21 @@ BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
   double r = transparent(prototype, 5);
   BOOST_CHECK_CLOSE(r, 18.68835, 1e-4);
 }
+
+/**
+ * Attribute set with no prototype, should not even compile
+ * Uncomment to actually test this
+ */
+/*
+BOOST_FIXTURE_TEST_CASE(WithObjectForgotPrototype_test, PythonFixture) {
+ ExpressionTreeBuilder builder;
+
+ auto py_func = py::eval("lambda o, y: np.log(o.flux) * y", main_namespace);
+ AttributeSet prototype{{"flux", 0.}};
+
+ builder.build < double(
+ const AttributeSet&, double)>(py_func);
+}
+*/
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -28,32 +28,47 @@ struct placeholderHelper;
 
 template<unsigned pos, typename A0, typename... AN>
 struct placeholderHelper<pos, A0, AN...> {
+
+  template<typename... Prototypes>
   static void append(boost::python::list& placeholders,
-                     std::vector<AttributeSet>::const_iterator ai) {
+                     Prototypes&&... prototypes) {
     placeholders.append(std::make_shared<Placeholder<A0>>(boost::python::len(placeholders)));
-    placeholderHelper<pos - 1, AN...>::append(placeholders, ai);
+    placeholderHelper<pos - 1, AN...>::append(placeholders, std::forward<Prototypes>(prototypes)...);
   }
 };
 
 template<unsigned pos, typename...AN>
 struct placeholderHelper<pos, AttributeSet, AN...> {
+
+  template<typename P1, typename... Prototypes>
   static void append(boost::python::list& placeholders,
-                     std::vector<AttributeSet>::const_iterator ai) {
-    placeholders.append(std::make_shared<Placeholder<AttributeSet>>(boost::python::len(placeholders), *ai));
-    placeholderHelper<pos - 1, AN...>::append(placeholders, ++ai);
+                     const P1& p1, Prototypes&&... prototypes) {
+    placeholders.append(
+      std::make_shared<Placeholder<AttributeSet>>(boost::python::len(placeholders), p1)
+    );
+    placeholderHelper<pos - 1, AN...>::append(placeholders, std::forward<Prototypes>(prototypes)...);
+  }
+
+  template<typename... Prototypes>
+  static void append(boost::python::list&) {
+    static_assert(sizeof...(Prototypes) > 0,
+      "AttributeSet on the signature but no prototype provided"
+    );
   }
 };
 
 template<>
 struct placeholderHelper<0> {
-  static void append(boost::python::list&, std::vector<AttributeSet>::const_iterator) {
+  static void append(boost::python::list&) {
   }
 };
 
 template<typename R, typename... Args>
+template<typename ...Prototypes>
 ExpressionTree<R(Args...)>
 ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::object& pyfunc,
-                                                      std::vector<AttributeSet>::const_iterator ai) {
+                                                      Prototypes&&... prototypes) {
+
   GILLocker gil_ensure;
 
   std::shared_ptr<Node<R>> root;
@@ -63,7 +78,8 @@ ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::objec
   // Try building a computing graph
   try {
     boost::python::list placeholders;
-    placeholderHelper<sizeof...(Args), typename std::remove_const<typename std::remove_reference<Args>::type>::type...>::append(placeholders, ai);
+    placeholderHelper<sizeof...(Args), typename std::remove_const<typename std::remove_reference<Args>::type>::type...>
+      ::append(placeholders, std::forward<Prototypes>(prototypes)...);
     auto py_comp = pyfunc(*boost::python::tuple(placeholders));
     root = boost::python::extract<std::shared_ptr<Node<R>>>(py_comp);
     compiled = true;
