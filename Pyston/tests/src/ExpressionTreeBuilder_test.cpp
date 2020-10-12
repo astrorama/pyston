@@ -301,4 +301,26 @@ def non_compilable(o, y):
   BOOST_CHECK_CLOSE(r, 5, 1e-8);
 }
 
+/**
+ * Attribute set by reference should be acceptable too
+ */
+BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+
+  auto py_func = py::eval("lambda o, y: np.log(o.flux) * y", main_namespace);
+  AttributeSet prototype{{"flux", 0.}};
+
+  std::function<double(const AttributeSet&, double)> transparent;
+  {
+    auto tree = builder.build<double(const AttributeSet&, double)>(py_func, {prototype});
+    BOOST_CHECK(tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
+  }
+
+  prototype["flux"] = 42.;
+  double r = transparent(prototype, 5);
+  BOOST_CHECK_CLOSE(r, 18.68835, 1e-4);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

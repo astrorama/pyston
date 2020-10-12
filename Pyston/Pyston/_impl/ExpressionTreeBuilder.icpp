@@ -63,7 +63,7 @@ ExpressionTreeBuilder::buildHelper<R(Args...)>::build(const boost::python::objec
   // Try building a computing graph
   try {
     boost::python::list placeholders;
-    placeholderHelper<sizeof...(Args), Args...>::append(placeholders, ai);
+    placeholderHelper<sizeof...(Args), typename std::remove_const<typename std::remove_reference<Args>::type>::type...>::append(placeholders, ai);
     auto py_comp = pyfunc(*boost::python::tuple(placeholders));
     root = boost::python::extract<std::shared_ptr<Node<R>>>(py_comp);
     compiled = true;
