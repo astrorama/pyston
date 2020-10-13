@@ -30,30 +30,9 @@ namespace Pyston {
 template<typename Signature>
 class ExpressionTree;
 
-/**
- * Wraps a call to an expression tree
- * @tparam R
- *  Return type
- * @tparam Args
- *  Argument types
- */
-template<typename R, typename ...Args>
-class ExpressionTree<R(Args...)> {
+template<typename R>
+class ExpressionTreeBase {
 public:
-
-  /**
-   * Use the tree as a function
-   * @param args
-   *    Argument list
-   */
-  R operator()(const Context& context, Args&&...args) const {
-    return m_root->eval(context, std::forward<Args>(args)...);
-  }
-
-  R operator()(Args&& ...args) const {
-    return m_root->eval(Context{}, std::forward<Args>(args)...);
-  }
-
   /**
    * @return
    *    True if the expression tree has been fully "compiled",
@@ -67,7 +46,7 @@ public:
    * @return
    *    If isCompiled is false, return the reason for it
    */
-  const Exception* reason() const {
+  const Exception *reason() const {
     return m_reason.get();
   }
 
@@ -79,15 +58,96 @@ public:
     return m_root;
   }
 
-private:
+protected:
   bool m_is_compiled;
   std::shared_ptr<Node<R>> m_root;
   std::shared_ptr<Exception> m_reason;
 
-  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root,
-                 const std::shared_ptr<Exception>& reason)
+  ExpressionTreeBase(bool compiled, const std::shared_ptr<Node<R>>& root,
+                     const std::shared_ptr<Exception>& reason)
     : m_is_compiled{compiled}, m_root{root}, m_reason{reason} {
   }
+};
+
+/**
+ * Wraps a call to an expression tree. Specialized for parameters as a vector
+ * of values
+ * @tparam R
+ *  Return type
+ * @tparam T
+ *  Argument type
+ */
+template<typename R, typename T>
+class ExpressionTree<R(const std::vector<T>&)> : public ExpressionTreeBase<R> {
+public:
+
+  /**
+   * Use the tree as a function
+   * @param args
+   *    Argument list
+   */
+  R operator()(const Context& context, const std::vector<T>& args) const {
+    Arguments converted;
+    std::copy(args.begin(), args.end(), std::back_inserter(converted));
+    return m_root->eval(context, converted);
+  }
+
+  /**
+   * Use the tree as a function
+   * @param args
+   *    Argument list
+   */
+  R operator()(const std::vector<T>& args) const {
+    Arguments converted;
+    std::copy(args.begin(), args.end(), std::back_inserter(converted));
+    return m_root->eval({}, converted);
+  }
+
+private:
+  using ExpressionTreeBase<R>::m_root;
+
+  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root,
+                 const std::shared_ptr<Exception>& reason)
+    : ExpressionTreeBase<R>(compiled, root, reason) {}
+
+  friend class ExpressionTreeBuilder;
+};
+
+/**
+ * Wraps a call to an expression tree. Specialized for the general case.
+ * @tparam R
+ *  Return type
+ * @tparam Args
+ *  Argument types
+ */
+template<typename R, typename ...Args>
+class ExpressionTree<R(Args...)> : public ExpressionTreeBase<R> {
+public:
+
+  /**
+   * Use the tree as a function
+   * @param args
+   *    Argument list
+   */
+  R operator()(const Context& context, Args&& ...args) const {
+    return m_root->eval(context, std::forward<Args>(args)...);
+  }
+
+  /**
+   * Use the tree as a function
+   * @param args
+   *    Argument list
+   */
+  R operator()(Args&& ...args) const {
+    return m_root->eval(Context{}, std::forward<Args>(args)...);
+  }
+
+private:
+  using ExpressionTreeBase<R>::m_root;
+
+  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root,
+                 const std::shared_ptr<Exception>& reason)
+    : ExpressionTreeBase<R>(compiled, root, reason) {}
 
   friend class ExpressionTreeBuilder;
 };

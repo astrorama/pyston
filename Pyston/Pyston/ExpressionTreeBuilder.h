@@ -49,16 +49,17 @@ public:
    *    Function signature (i.e. double(double,double))
    * @param pyfunc
    *    Python object pointing to a callable. Its signature must match the template.
-   * @param prototypes
-   *    List of prototype attribute sets *iff* the signature includes any. The same
-   *    order is expected
+   * @param build_params
+   *    Required build parameters: either prototypes for AttributeSet, if any is passed along,
+   *    or the number of elements for functions with variable number of parameters
    * @return
    *    A pair, where the first value is a boolean set to `true` if an expression tree could
    *    be built, false otherwise. The second value is the wrapping functor.
    */
-  template<typename Signature, typename ...Prototypes>
-  ExpressionTree<Signature> build(const boost::python::object& pyfunc, Prototypes&&... proto) const {
-    return buildHelper<Signature>::build(pyfunc, std::forward<Prototypes>(proto)...);
+  template<typename Signature, typename ...BuildParams>
+  ExpressionTree<Signature>
+  build(const boost::python::object& pyfunc, BuildParams&& ... build_params) const {
+    return buildHelper<Signature>::build(pyfunc, std::forward<BuildParams>(build_params)...);
   }
 
   /**
@@ -81,6 +82,19 @@ private:
   struct buildHelper;
 
   /**
+   * Specialization for functions that receive a variable number of arguments of
+   * the same type
+   * @tparam R
+   *    Return type
+   * @tparam T
+   *    Parameter type
+   */
+  template<typename R, typename T>
+  struct buildHelper<R(const std::vector<T>&)> {
+    static ExpressionTree<R(const std::vector<T>&)> build(const boost::python::object&, size_t n);
+  };
+
+  /**
    * Specialization that "unwraps" the function signature into return type and arguments
    */
   template<typename R, typename... Args>
@@ -88,6 +102,13 @@ private:
     template<typename... Prototypes>
     static ExpressionTree<R(Args...)> build(const boost::python::object&, Prototypes&&...);
   };
+
+  /**
+   * Common to buildHelper specializations
+   */
+  template<typename R, typename ...Args>
+  static ExpressionTree<R(Args...)> compiledOrWrapped(const boost::python::object& pyfunc,
+                                                      const boost::python::list& placeholders);
 };
 
 } // end of namespace Pyston

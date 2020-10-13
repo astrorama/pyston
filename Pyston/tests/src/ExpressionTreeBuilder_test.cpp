@@ -314,9 +314,7 @@ BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
 
   std::function<double(const AttributeSet&, double)> transparent;
   {
-    auto
-    tree = builder.build < double(
-    const AttributeSet&, double)>(py_func, prototype);
+    auto tree = builder.build<double(const AttributeSet&, double)>(py_func, prototype);
     BOOST_CHECK(tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -325,6 +323,25 @@ BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
   prototype["flux"] = 42.;
   double r = transparent(prototype, 5);
   BOOST_CHECK_CLOSE(r, 18.68835, 1e-4);
+}
+
+/**
+ * Function with variable, unknown at compile time, number of parameters
+ */
+BOOST_FIXTURE_TEST_CASE(WithVectorOfDouble_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+
+  auto py_func = py::eval("lambda x, y, z: x + y + z", main_namespace);
+  std::function<double(const std::vector<double>&)> transparent;
+  {
+    auto tree = builder.build<double(const std::vector<double>&)>(py_func, 3);
+    BOOST_CHECK(tree.isCompiled());
+    BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
+    transparent = tree;
+  }
+
+  double r = transparent({1, 2, 3});
+  BOOST_CHECK_EQUAL(6, r);
 }
 
 /**
