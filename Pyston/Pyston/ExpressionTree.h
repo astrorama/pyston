@@ -129,8 +129,8 @@ public:
    * @param args
    *    Argument list
    */
-  R operator()(const Context& context, Args&& ...args) const {
-    return m_root->eval(context, std::forward<Args>(args)...);
+  R operator()(const Context& context, const Args& ...args) const {
+    return m_root->eval(context, args...);
   }
 
   /**
@@ -138,8 +138,8 @@ public:
    * @param args
    *    Argument list
    */
-  R operator()(Args&& ...args) const {
-    return m_root->eval(Context{}, std::forward<Args>(args)...);
+  R operator()(const Args& ...args) const {
+    return m_root->eval(Context{}, args...);
   }
 
 private:
