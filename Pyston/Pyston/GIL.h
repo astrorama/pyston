@@ -19,7 +19,7 @@
 #ifndef PYSTON_GIL_H
 #define PYSTON_GIL_H
 
-#include "Python.h"
+#include <Python.h>
 
 namespace Pyston {
 
