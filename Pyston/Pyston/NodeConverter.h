@@ -19,8 +19,8 @@
 #ifndef PYSTON_NODECONVERTER_H
 #define PYSTON_NODECONVERTER_H
 
-#include <boost/python.hpp>
 #include "Pyston/Graph/Constant.h"
+#include <boost/python.hpp>
 
 namespace Pyston {
 
@@ -35,15 +35,15 @@ namespace Pyston {
  * @return
  *    true if it could be converted
  */
-template<typename To, typename From>
-static bool createCastNode(boost::python::object& object, void *storage) {
+template <typename To, typename From>
+static bool createCastNode(boost::python::object& object, void* storage) {
   using boost::python::extract;
 
   extract<std::shared_ptr<Node<From>>> extractor(object);
   if (!extractor.check())
     return false;
 
-  new(storage)std::shared_ptr<Node<To>>(new Cast<To, From>(extractor));
+  new (storage) std::shared_ptr<Node<To>>(new Cast<To, From>(extractor));
 
   return true;
 }
@@ -53,13 +53,13 @@ static bool createCastNode(boost::python::object& object, void *storage) {
  * @tparam T
  *  Node type
  */
-template<typename T>
+template <typename T>
 struct NodeCast {
   /**
    * @return
    *    true if the object can be converted to T via an upcast
    */
-  static bool isUpcast(PyObject *) {
+  static bool isUpcast(PyObject*) {
     return false;
   }
 
@@ -68,7 +68,7 @@ struct NodeCast {
    * @return
    *    true if it could be converted
    */
-  static bool cast(PyObject *, void *) {
+  static bool cast(PyObject*, void*) {
     return false;
   }
 };
@@ -77,20 +77,20 @@ struct NodeCast {
  * Trait specialization for double
  * booleans and integers can be upcasted to double
  */
-template<>
+template <>
 struct NodeCast<double> {
 
   /**
    * @copydoc NodeCast::isUpcast
    */
-  static bool isUpcast(PyObject *obj_ptr) {
-    using boost::python::handle;
-    using boost::python::object;
+  static bool isUpcast(PyObject* obj_ptr) {
     using boost::python::borrowed;
     using boost::python::extract;
+    using boost::python::handle;
+    using boost::python::object;
 
-    object object(handle<>(borrowed(obj_ptr)));
-    extract<Node<bool>> bool_extract(object);
+    object                 object(handle<>(borrowed(obj_ptr)));
+    extract<Node<bool>>    bool_extract(object);
     extract<Node<int64_t>> int_extract(object);
 
     if (bool_extract.check() || int_extract.check()) {
@@ -103,15 +103,14 @@ struct NodeCast<double> {
   /**
    * @copydoc NodeCast::cast
    */
-  static bool cast(PyObject *obj_ptr, void *storage) {
-    using boost::python::handle;
+  static bool cast(PyObject* obj_ptr, void* storage) {
     using boost::python::borrowed;
+    using boost::python::handle;
     using boost::python::object;
 
     object object(handle<>(borrowed(obj_ptr)));
 
-    return createCastNode<double, bool>(object, storage) ||
-           createCastNode<double, int64_t>(object, storage);
+    return createCastNode<double, bool>(object, storage) || createCastNode<double, int64_t>(object, storage);
   }
 };
 
@@ -119,19 +118,19 @@ struct NodeCast<double> {
  * Trait specialization for integers
  * booleans can be upcasted to integers
  */
-template<>
+template <>
 struct NodeCast<int64_t> {
 
   /**
    * @copydoc NodeCast::isUpcast
    */
-  static bool isUpcast(PyObject *obj_ptr) {
-    using boost::python::handle;
-    using boost::python::object;
+  static bool isUpcast(PyObject* obj_ptr) {
     using boost::python::borrowed;
     using boost::python::extract;
+    using boost::python::handle;
+    using boost::python::object;
 
-    object object(handle<>(borrowed(obj_ptr)));
+    object              object(handle<>(borrowed(obj_ptr)));
     extract<Node<bool>> bool_extract(object);
 
     return bool_extract.check();
@@ -140,9 +139,9 @@ struct NodeCast<int64_t> {
   /**
    * @copydoc NodeCast::cast
    */
-  static bool cast(PyObject *obj_ptr, void *storage) {
-    using boost::python::handle;
+  static bool cast(PyObject* obj_ptr, void* storage) {
     using boost::python::borrowed;
+    using boost::python::handle;
     using boost::python::object;
 
     object object(handle<>(borrowed(obj_ptr)));
@@ -156,7 +155,7 @@ struct NodeCast<int64_t> {
  * @tparam T
  *  Node type *into* which types can be converted
  */
-template<typename T>
+template <typename T>
 struct NodeConverter {
   /**
    * Check if the python object can be converted to a known type
@@ -165,11 +164,11 @@ struct NodeConverter {
    * @return
    *    obj_ptr if it can be converted, NULL otherwise
    */
-  static void *isConvertible(PyObject *obj_ptr) {
-    using boost::python::handle;
-    using boost::python::object;
+  static void* isConvertible(PyObject* obj_ptr) {
     using boost::python::borrowed;
     using boost::python::extract;
+    using boost::python::handle;
+    using boost::python::object;
     using boost::python::converter::registry::query;
 
     // Primitive numeric types are ok
@@ -194,7 +193,7 @@ struct NodeConverter {
    * @return
    *    true if it could be converted
    */
-  static bool fromPrimitive(PyObject *obj_ptr, void *storage) {
+  static bool fromPrimitive(PyObject* obj_ptr, void* storage) {
     if (!PyFloat_Check(obj_ptr) && !PyLong_Check(obj_ptr) && !PyBool_Check(obj_ptr))
       return false;
 
@@ -207,7 +206,7 @@ struct NodeConverter {
     else if (PyBool_Check(obj_ptr))
       value = (obj_ptr == Py_True);
 
-    new(storage) std::shared_ptr<Node<T>>(new Constant<T>(value));
+    new (storage) std::shared_ptr<Node<T>>(new Constant<T>(value));
     return true;
   }
 
@@ -218,10 +217,10 @@ struct NodeConverter {
    * @param data
    *    boost python data required to construct the new object
    */
-  static void
-  construct(PyObject *obj_ptr, boost::python::converter::rvalue_from_python_stage1_data *data) {
+  static void construct(PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data) {
     // Memory area where to store the new type
-    void *storage = ((boost::python::converter::rvalue_from_python_storage<std::shared_ptr<Node<T>>> *) data)->storage.bytes;
+    void* storage =
+        ((boost::python::converter::rvalue_from_python_storage<std::shared_ptr<Node<T>>>*)data)->storage.bytes;
 
     // Abort if can not convert, because isConvertible hasn't done its job
     if (!fromPrimitive(obj_ptr, storage) && !NodeCast<T>::cast(obj_ptr, storage))
@@ -231,6 +230,6 @@ struct NodeConverter {
   }
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_NODECONVERTER_H
+#endif  // PYSTON_NODECONVERTER_H

@@ -41,12 +41,12 @@ public:
   /**
    * @copydoc Visitor::enter
    */
-  void enter(const NodeBase *node) override;
+  void enter(const NodeBase* node) override;
 
   /**
    * @copydoc Visitor::exit
    */
-  void exit(const NodeBase *) override;
+  void exit(const NodeBase*) override;
 
   /**
    * @return
@@ -55,11 +55,11 @@ public:
   std::string str() const;
 
 private:
-  int64_t m_unique_id;
-  std::stringstream m_stream;
+  int64_t            m_unique_id;
+  std::stringstream  m_stream;
   std::list<int64_t> m_stack;
 };
 
-}
+}  // namespace Pyston
 
-#endif //PYSTON_GRAPHVIZGENERATOR_H
+#endif  // PYSTON_GRAPHVIZGENERATOR_H

@@ -19,13 +19,13 @@
 #ifndef PYSTON_NODE_H
 #define PYSTON_NODE_H
 
+#include <boost/any.hpp>
+#include <boost/variant.hpp>
 #include <map>
 #include <memory>
 #include <string>
 #include <typeindex>
 #include <vector>
-#include <boost/any.hpp>
-#include <boost/variant.hpp>
 
 namespace Pyston {
 
@@ -79,7 +79,7 @@ private:
 /**
  * Arbitrary key/value pairs, interpreted as an object attribute
  */
-using Attribute = boost::variant<bool, int64_t, double>;
+using Attribute    = boost::variant<bool, int64_t, double>;
 using AttributeSet = std::map<std::string, Attribute>;
 
 /**
@@ -101,7 +101,7 @@ using Context = std::map<std::string, boost::any>;
 /**
  * A node on the computing tree, which has an associated primitive type
  */
-template<typename T>
+template <typename T>
 class Node : public NodeBase {
 public:
   /**
@@ -128,13 +128,13 @@ public:
    */
   virtual T eval(const Context&, const Arguments&) const = 0;
 
-  template<typename ...Args>
+  template <typename... Args>
   T eval(const Context& context, Args... args) const {
     Arguments arguments;
     return eval_helper(context, arguments, args...);
   }
 
-  template<typename ...Args>
+  template <typename... Args>
   T eval(Args... args) const {
     return eval(Context{}, args...);
   }
@@ -144,7 +144,7 @@ protected:
     return eval(context, arguments);
   }
 
-  template<typename A0, typename ...AN>
+  template <typename A0, typename... AN>
   T eval_helper(const Context& context, Arguments& arguments, A0 v0, AN... an) const {
     arguments.push_back(v0);
     return eval_helper(context, arguments, an...);
@@ -162,14 +162,14 @@ public:
   /**
    * Called when a node is entered
    */
-  virtual void enter(const NodeBase *) = 0;
+  virtual void enter(const NodeBase*) = 0;
 
   /**
    * Called when a node is left
    */
-  virtual void exit(const NodeBase *) = 0;
+  virtual void exit(const NodeBase*) = 0;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_NODE_H
+#endif  // PYSTON_NODE_H

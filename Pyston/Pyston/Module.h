@@ -22,13 +22,13 @@
 #include "Python.h"
 
 extern "C" {
-  /**
-   * Method used by Python to import this library. It can be used directly when
-   * embedding via:
-   *    PyImport_AppendInittab("pyston", &PyInit_libPyston)
-   * This *must* be done before calling Py_Initialize
-   */
-  PyObject *PyInit_libPyston(void);
+/**
+ * Method used by Python to import this library. It can be used directly when
+ * embedding via:
+ *    PyImport_AppendInittab("pyston", &PyInit_libPyston)
+ * This *must* be done before calling Py_Initialize
+ */
+PyObject* PyInit_libPyston(void);
 }
 
-#endif //PYSTON_MODULE_H
+#endif  // PYSTON_MODULE_H

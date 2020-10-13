@@ -19,28 +19,25 @@
 #ifndef PYSTON_HELPERS_H
 #define PYSTON_HELPERS_H
 
-#include <memory>
-#include <boost/python.hpp>
 #include "Pyston/Graph/Cast.h"
 #include "Pyston/Graph/Function.h"
+#include <boost/python.hpp>
+#include <memory>
 
 namespace Pyston {
 
-template<typename Signature>
+template <typename Signature>
 struct makeFunctionHelper;
 
 /**
  * Create a function factory for functions that expect a context
  */
-template<typename R, typename... Args>
+template <typename R, typename... Args>
 struct makeFunctionHelper<R(const Context&, Args...)> {
-  static boost::python::object
-  make(const std::string& repr, std::function<R(const Context&, Args...)> functor) {
+  static boost::python::object make(const std::string& repr, std::function<R(const Context&, Args...)> functor) {
     return boost::python::make_function(
-      FunctionFactory<R(Args...)>(repr, functor),
-      boost::python::default_call_policies(),
-      boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<Args>>& ...>()
-    );
+        FunctionFactory<R(Args...)>(repr, functor), boost::python::default_call_policies(),
+        boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<Args>>&...>());
   }
 };
 
@@ -48,21 +45,17 @@ struct makeFunctionHelper<R(const Context&, Args...)> {
  * Create a function factory for functions that do *not* expect a context, wrapping them
  * into a lambda expression that just ignores it
  */
-template<typename R, typename... Args>
+template <typename R, typename... Args>
 struct makeFunctionHelper<R(Args...)> {
   static boost::python::object make(const std::string& repr, std::function<R(Args...)> functor) {
-    auto wrapped = [functor](const Context&, Args... args) {
-      return functor(args...);
-    };
+    auto wrapped = [functor](const Context&, Args... args) { return functor(args...); };
     return boost::python::make_function(
-      FunctionFactory<R(Args...)>(repr, wrapped),
-      boost::python::default_call_policies(),
-      boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<Args>>& ...>()
-    );
+        FunctionFactory<R(Args...)>(repr, wrapped), boost::python::default_call_policies(),
+        boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<Args>>&...>());
   }
 };
 
-template<typename Signature>
+template <typename Signature>
 struct makeBinaryFunctionHelper;
 
 /**
@@ -73,28 +66,23 @@ struct makeBinaryFunctionHelper;
  * @tparam T
  *  Type of the parameter
  */
-template<typename R, typename T>
+template <typename R, typename T>
 struct makeBinaryFunctionHelper<R(T, T)> {
 
-  static boost::python::object make(const std::string& repr, std::function<R(T,T)> functor,
-                                    bool reversed) {
-    FunctionFactory<R(T, T)> factory(repr, [functor](const Context&, T l, T r) {
-      return functor(l, r);
-    });
+  static boost::python::object make(const std::string& repr, std::function<R(T, T)> functor, bool reversed) {
+    FunctionFactory<R(T, T)> factory(repr, [functor](const Context&, T l, T r) { return functor(l, r); });
 
     return boost::python::make_function(
-      [factory, reversed](const std::shared_ptr<Node<T>>& left,
-                          const std::shared_ptr<Node<T>>& right) {
-        if (reversed)
-          return factory(right, left);
-        return factory(left, right);
-      },
-      boost::python::default_call_policies(),
-      boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&, const std::shared_ptr<Node<T>>&>()
-    );
+        [factory, reversed](const std::shared_ptr<Node<T>>& left, const std::shared_ptr<Node<T>>& right) {
+          if (reversed)
+            return factory(right, left);
+          return factory(left, right);
+        },
+        boost::python::default_call_policies(),
+        boost::mpl::vector<std::shared_ptr<Node<R>>, const std::shared_ptr<Node<T>>&,
+                           const std::shared_ptr<Node<T>>&>());
   }
 };
-
 
 /**
  * @details
@@ -111,9 +99,8 @@ struct makeBinaryFunctionHelper<R(T, T)> {
  * @return
  *  A callable python object
  */
-template<typename Signature>
-static boost::python::object makeFunction(const std::string& repr,
-                                          std::function<Signature> functor) {
+template <typename Signature>
+static boost::python::object makeFunction(const std::string& repr, std::function<Signature> functor) {
   return makeFunctionHelper<Signature>::make(repr, functor);
 }
 
@@ -132,12 +119,12 @@ static boost::python::object makeFunction(const std::string& repr,
  * @return
  *  A callable python object
  */
-template<typename Signature>
-static boost::python::object makeBinaryFunction(const std::string& repr,
-                                                std::function<Signature> functor, bool reversed = false) {
+template <typename Signature>
+static boost::python::object makeBinaryFunction(const std::string& repr, std::function<Signature> functor,
+                                                bool reversed = false) {
   return makeBinaryFunctionHelper<Signature>::make(repr, functor, reversed);
 }
 
-}
+}  // namespace Pyston
 
-#endif //PYSTON_HELPERS_H
+#endif  // PYSTON_HELPERS_H

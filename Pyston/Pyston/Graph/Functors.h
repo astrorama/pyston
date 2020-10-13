@@ -26,8 +26,8 @@ namespace Pyston {
 /**
  * Convenience functor, used to attach a method for the unary '+' operator
  */
-template<typename T>
-struct Identity: public std::unary_function<T,T> {
+template <typename T>
+struct Identity : public std::unary_function<T, T> {
   T operator()(T value) const {
     return value;
   }
@@ -44,7 +44,7 @@ struct Identity: public std::unary_function<T,T> {
  * @tparam wrapped
  *  A pointer to the function being wrapped
  */
-template<typename R, typename T, R(*wrapped)(T)>
+template <typename R, typename T, R (*wrapped)(T)>
 struct UnaryWrapper : public std::unary_function<T, R> {
   R operator()(T value) const {
     return wrapped(value);
@@ -62,7 +62,7 @@ struct UnaryWrapper : public std::unary_function<T, R> {
  * @tparam wrapped
  *  A pointer to the function being wrapped
  */
-template<typename R, typename T, R(*wrapped)(T, T)>
+template <typename R, typename T, R (*wrapped)(T, T)>
 struct BinaryWrapper : public std::binary_function<T, T, R> {
   R operator()(T left, T right) const {
     return wrapped(left, right);
@@ -70,89 +70,89 @@ struct BinaryWrapper : public std::binary_function<T, T, R> {
 };
 
 /// Wraps the power function
-template<typename T>
+template <typename T>
 using Pow = BinaryWrapper<T, T, std::pow>;
 
 /// Wraps the abs function
-template<typename T>
+template <typename T>
 using Abs = UnaryWrapper<T, T, std::abs>;
 
 /// Wraps the round function
-template<typename T>
+template <typename T>
 using Round = UnaryWrapper<T, T, std::round>;
 
 /// Wraps the exponential function
-template<typename T>
+template <typename T>
 using Exp = UnaryWrapper<T, T, std::exp>;
 
 /// Wraps the exponential, base 2, function
-template<typename T>
+template <typename T>
 using Exp2 = UnaryWrapper<T, T, std::exp2>;
 
 /// Wraps the log function
-template<typename T>
+template <typename T>
 using Log = UnaryWrapper<T, T, std::log>;
 
 /// Wraps the log, base 2, function
-template<typename T>
+template <typename T>
 using Log2 = UnaryWrapper<T, T, std::log2>;
 
 /// Wraps the log, base 10, function
-template<typename T>
+template <typename T>
 using Log10 = UnaryWrapper<T, T, std::log10>;
 
 /// Wraps the square root function
-template<typename T>
+template <typename T>
 using Sqrt = UnaryWrapper<T, T, std::sqrt>;
 
 /// Wraps the sin function
-template<typename T>
+template <typename T>
 using Sin = UnaryWrapper<T, T, std::sin>;
 
 /// Wraps the cos function
-template<typename T>
+template <typename T>
 using Cos = UnaryWrapper<T, T, std::cos>;
 
 /// Wraps the tan function
-template<typename T>
+template <typename T>
 using Tan = UnaryWrapper<T, T, std::tan>;
 
 /// Wraps the arcsin function
-template<typename T>
+template <typename T>
 using ArcSin = UnaryWrapper<T, T, std::asin>;
 
 /// Wraps the arcos function
-template<typename T>
+template <typename T>
 using ArcCos = UnaryWrapper<T, T, std::acos>;
 
 /// Wraps the arctan function
-template<typename T>
+template <typename T>
 using ArcTan = UnaryWrapper<T, T, std::atan>;
 
 /// Wraps the hyperbolic sin function
-template<typename T>
+template <typename T>
 using Sinh = UnaryWrapper<T, T, std::sinh>;
 
 /// Wraps the hyperbolic cos function
-template<typename T>
+template <typename T>
 using Cosh = UnaryWrapper<T, T, std::cosh>;
 
 /// Wraps the hyperbolic tan function
-template<typename T>
+template <typename T>
 using Tanh = UnaryWrapper<T, T, std::tanh>;
 
 /// Wraps the hyperbolic arcsin function
-template<typename T>
+template <typename T>
 using ArcSinh = UnaryWrapper<T, T, std::asinh>;
 
 /// Wraps the hyperbolic arccos function
-template<typename T>
+template <typename T>
 using ArcCosh = UnaryWrapper<T, T, std::acosh>;
 
 /// Wraps the hyperbolic arctan function
-template<typename T>
+template <typename T>
 using ArcTanh = UnaryWrapper<T, T, std::atanh>;
 
-}
+}  // namespace Pyston
 
-#endif //PYSTON_FUNCTORS_H
+#endif  // PYSTON_FUNCTORS_H

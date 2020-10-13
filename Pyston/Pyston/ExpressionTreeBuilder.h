@@ -19,18 +19,18 @@
 #ifndef PYSTON_EXPRESSIONTREEBUILDER_H
 #define PYSTON_EXPRESSIONTREEBUILDER_H
 
-#include <functional>
-#include <tuple>
 #include <boost/python/list.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/object/add_to_namespace.hpp>
 #include <boost/python/tuple.hpp>
+#include <functional>
+#include <tuple>
 
 #include "Pyston/Exceptions.h"
 #include "Pyston/ExpressionTree.h"
 #include "Pyston/GIL.h"
-#include "Pyston/Graph/Placeholder.h"
 #include "Pyston/Graph/AttributeSet.h"
+#include "Pyston/Graph/Placeholder.h"
 #include "Pyston/Helpers.h"
 
 namespace Pyston {
@@ -42,7 +42,6 @@ namespace Pyston {
  */
 class ExpressionTreeBuilder {
 public:
-
   /**
    * Build an expression tree, or wrap the Python function in a compatible manner
    * @tparam Signature
@@ -56,9 +55,8 @@ public:
    *    A pair, where the first value is a boolean set to `true` if an expression tree could
    *    be built, false otherwise. The second value is the wrapping functor.
    */
-  template<typename Signature, typename ...BuildParams>
-  ExpressionTree<Signature>
-  build(const boost::python::object& pyfunc, BuildParams&& ... build_params) const {
+  template <typename Signature, typename... BuildParams>
+  ExpressionTree<Signature> build(const boost::python::object& pyfunc, BuildParams&&... build_params) const {
     return buildHelper<Signature>::build(pyfunc, std::forward<BuildParams>(build_params)...);
   }
 
@@ -71,14 +69,14 @@ public:
    * @note
    *    The return and parameter types are deduced from the Signature
    */
-  template<typename Signature>
+  template <typename Signature>
   void registerFunction(const std::string& repr, std::function<Signature> functor);
 
 private:
   /**
    * Required to support function signatures
    */
-  template<typename Signature>
+  template <typename Signature>
   struct buildHelper;
 
   /**
@@ -89,7 +87,7 @@ private:
    * @tparam T
    *    Parameter type
    */
-  template<typename R, typename T>
+  template <typename R, typename T>
   struct buildHelper<R(const std::vector<T>&)> {
     static ExpressionTree<R(const std::vector<T>&)> build(const boost::python::object&, size_t n);
   };
@@ -97,24 +95,24 @@ private:
   /**
    * Specialization that "unwraps" the function signature into return type and arguments
    */
-  template<typename R, typename... Args>
+  template <typename R, typename... Args>
   struct buildHelper<R(Args...)> {
-    template<typename... Prototypes>
+    template <typename... Prototypes>
     static ExpressionTree<R(Args...)> build(const boost::python::object&, Prototypes&&...);
   };
 
   /**
    * Common to buildHelper specializations
    */
-  template<typename R, typename ...Args>
+  template <typename R, typename... Args>
   static ExpressionTree<R(Args...)> compiledOrWrapped(const boost::python::object& pyfunc,
-                                                      const boost::python::list& placeholders);
+                                                      const boost::python::list&   placeholders);
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
 #define PYSTON_EXPRESSIONTREEBUILDER_IMPL
 #include "Pyston/_impl/ExpressionTreeBuilder.icpp"
 #undef PYSTON_EXPRESSIONTREEBUILDER_IMPL
 
-#endif //PYSTON_EXPRESSIONTREEBUILDER_H
+#endif  // PYSTON_EXPRESSIONTREEBUILDER_H

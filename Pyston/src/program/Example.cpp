@@ -21,19 +21,19 @@
 #include <map>
 #include <string>
 
+#include "Pyston/Exceptions.h"
+#include "Pyston/ExpressionTreeBuilder.h"
+#include "Pyston/GIL.h"
+#include "Pyston/Graph/Functors.h"
+#include "Pyston/Graph/Placeholder.h"
+#include "Pyston/Module.h"
+#include "Pyston/Util/GraphvizGenerator.h"
+#include <ElementsKernel/Auxiliary.h>
+#include <ElementsKernel/ProgramHeaders.h>
 #include <boost/program_options.hpp>
 #include <boost/python.hpp>
 #include <boost/thread.hpp>
 #include <boost/timer/timer.hpp>
-#include <ElementsKernel/ProgramHeaders.h>
-#include <ElementsKernel/Auxiliary.h>
-#include "Pyston/ExpressionTreeBuilder.h"
-#include "Pyston/Module.h"
-#include "Pyston/GIL.h"
-#include "Pyston/Graph/Placeholder.h"
-#include "Pyston/Graph/Functors.h"
-#include "Pyston/Util/GraphvizGenerator.h"
-#include "Pyston/Exceptions.h"
 
 using namespace Pyston;
 namespace po = boost::program_options;
@@ -47,7 +47,7 @@ double world2pix(double x) {
   return std::log10(x) * std::sin(x / 2);
 }
 
-template<typename T>
+template <typename T>
 using World2Pix = UnaryWrapper<T, T, world2pix>;
 
 /// Logger
@@ -59,22 +59,16 @@ static Elements::Logging logger = Elements::Logging::getLogger("Example");
 class Example : public Elements::Program {
 
 private:
-  int m_threads, m_repeats;
+  int      m_threads, m_repeats;
   fs::path m_dot_file;
 
 public:
-
   po::options_description defineSpecificProgramOptions() override {
     po::options_description options{"Pyston example options"};
-    options.add_options()
-      ("no-threads", po::value<int>()->default_value(1),
-       "Number of threads")
-      ("repeats", po::value<int>()->default_value(50000),
-       "Number of iterations inside the timing block")
-      ("file", po::value<std::string>()->default_value("example.py"),
-       "Python file to run")
-      ("dot-file", po::value<std::string>(),
-       "Generate a graphviz dot file with the computing graph (prefix)");
+    options.add_options()("no-threads", po::value<int>()->default_value(1), "Number of threads")(
+        "repeats", po::value<int>()->default_value(50000), "Number of iterations inside the timing block")(
+        "file", po::value<std::string>()->default_value("example.py"), "Python file to run")(
+        "dot-file", po::value<std::string>(), "Generate a graphviz dot file with the computing graph (prefix)");
 
     return options;
   }
@@ -87,7 +81,7 @@ public:
 
     logger.info() << "Generating " << full_name;
 
-    std::ofstream out(full_name.c_str());
+    std::ofstream     out(full_name.c_str());
     GraphvizGenerator generator(std::to_string(nparams));
     node.visit(generator);
     out << generator.str();
@@ -101,9 +95,9 @@ public:
 
     GILLocker locker;
 
-    py::object pyston = py::import("pyston");
-    py::dict evaluate = py::extract<py::dict>(pyston.attr("evaluate"));
-    py::list keys = evaluate.keys();
+    py::object pyston   = py::import("pyston");
+    py::dict   evaluate = py::extract<py::dict>(pyston.attr("evaluate"));
+    py::list   keys     = evaluate.keys();
 
     for (int i = 0; i < py::len(keys); ++i) {
       int nparams = py::extract<int>(keys[i]);
@@ -121,16 +115,15 @@ public:
         py::object func = evaluate[nparams];
 
         // Trigger a build of the tree calling with the placeholders
-        py::object comp_tree = func(*py::tuple(placeholders));
-        std::shared_ptr<Node<double>> node = py::extract<std::shared_ptr<Node<double>>>(comp_tree);
+        py::object                    comp_tree = func(*py::tuple(placeholders));
+        std::shared_ptr<Node<double>> node      = py::extract<std::shared_ptr<Node<double>>>(comp_tree);
 
         // Generate graphviz if needed
         generateGraphviz(*node, nparams);
 
         // Store
         calls[nparams] = std::make_pair(func, node);
-      }
-      catch (const py::error_already_set&) {
+      } catch (const py::error_already_set&) {
         throw Exception();
       }
     }
@@ -165,7 +158,7 @@ public:
     std::vector<double> measures;
 
     for (int nthreads = 1; nthreads <= m_threads; ++nthreads) {
-      boost::thread_group thread_group;
+      boost::thread_group     thread_group;
       boost::timer::cpu_timer timer;
       for (int n = 0; n < nthreads; ++n) {
         thread_group.create_thread(func);
@@ -173,7 +166,7 @@ public:
       thread_group.join_all();
       timer.stop();
 
-      auto calls_per_ns = (nthreads * m_repeats) / static_cast<double>(timer.elapsed().wall);
+      auto calls_per_ns  = (nthreads * m_repeats) / static_cast<double>(timer.elapsed().wall);
       auto calls_per_sec = calls_per_ns * 1e9;
       measures.emplace_back(calls_per_sec);
     }
@@ -193,16 +186,15 @@ public:
     for (auto& pair : callables) {
       logger.info() << "Timing calls with " << pair.first << " parameters";
 
-      auto params = createParameters(pair.first);
-      auto pyFunc = boost::bind(&Example::runPython, this, pair.second.first, params.first);
+      auto params  = createParameters(pair.first);
+      auto pyFunc  = boost::bind(&Example::runPython, this, pair.second.first, params.first);
       auto cppFunc = boost::bind(&Example::runCpp, this, pair.second.second, params.second);
 
       // Python
       auto measurements = measure(pyFunc);
       std::cout << "Python," << pair.first << ",";
       for (int nthread = 1; nthread <= m_threads; ++nthread) {
-        std::cout << std::fixed << std::setw(15) << std::setprecision(2)
-                  << measurements[nthread - 1] << ",";
+        std::cout << std::fixed << std::setw(15) << std::setprecision(2) << measurements[nthread - 1] << ",";
       }
       std::cout << std::endl;
 
@@ -210,8 +202,7 @@ public:
       measurements = measure(cppFunc);
       std::cout << "Pyston," << pair.first << ",";
       for (int nthread = 1; nthread <= m_threads; ++nthread) {
-        std::cout << std::fixed << std::setw(15) << std::setprecision(2)
-                  << measurements[nthread - 1] << ",";
+        std::cout << std::fixed << std::setw(15) << std::setprecision(2) << measurements[nthread - 1] << ",";
       }
       std::cout << std::endl;
     }
@@ -238,8 +229,8 @@ public:
     try {
       {
         GILLocker locker;
-        auto main_module = boost::python::import("__main__");
-        auto main_namespace = main_module.attr("__dict__");
+        auto      main_module    = boost::python::import("__main__");
+        auto      main_namespace = main_module.attr("__dict__");
 
         ExpressionTreeBuilder builder;
         builder.registerFunction<double(double)>("world2pix", World2Pix<double>());
@@ -249,14 +240,12 @@ public:
 
       // Evaluate calls
       evalExamples();
-    }
-    catch (const py::error_already_set&) {
+    } catch (const py::error_already_set&) {
       throw Exception();
     }
 
     return Elements::ExitCode::OK;
   }
-
 };
 
 MAIN_FOR(Example)

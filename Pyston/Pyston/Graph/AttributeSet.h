@@ -20,16 +20,16 @@
 #define PYSTON_ATTRIBUTESET_H
 
 #include "Placeholder.h"
+#include <boost/python/object.hpp>
 #include <set>
 #include <string>
-#include <boost/python/object.hpp>
 
 namespace Pyston {
 
 /**
  * A node that retrieves the value from a dictionary
  */
-template<typename T>
+template <typename T>
 class AttrGetter : public Node<T> {
 public:
   /**
@@ -39,8 +39,7 @@ public:
    * @param name
    *    The name of the attribute
    */
-  AttrGetter(const unsigned pos, const std::string& name) : m_pos{pos}, m_name{name} {
-  }
+  AttrGetter(const unsigned pos, const std::string& name) : m_pos{pos}, m_name{name} {}
 
   /**
    * @copydoc Node<T>::repr
@@ -63,8 +62,8 @@ public:
    *    std::out_of_range if the key is missing
    */
   T eval(const Context&, const Arguments& arguments) const override {
-    auto& attr_set = boost::get<AttributeSet>(arguments[m_pos]);
-    auto value_iter = attr_set.find(m_name);
+    auto& attr_set   = boost::get<AttributeSet>(arguments[m_pos]);
+    auto  value_iter = attr_set.find(m_name);
     if (value_iter == attr_set.end()) {
       throw std::out_of_range("AttributeSet object has no attribute '" + m_name + "'");
     }
@@ -72,7 +71,7 @@ public:
   }
 
 private:
-  unsigned m_pos;
+  unsigned    m_pos;
   std::string m_name;
 };
 
@@ -81,7 +80,7 @@ private:
  * Note that, unlike other placeholders, this is used only during the evaluation.
  * The final tree uses AttrGetter instances
  */
-template<>
+template <>
 class Placeholder<AttributeSet> {
 public:
   /**
@@ -91,9 +90,7 @@ public:
    * @param attrs
    *    Acceptable attribute names, with an instance of the acceptable type
    */
-  Placeholder(const unsigned pos, const AttributeSet& attrs)
-    : m_pos{pos}, m_attrs{attrs} {
-  }
+  Placeholder(const unsigned pos, const AttributeSet& attrs) : m_pos{pos}, m_attrs{attrs} {}
 
   /**
    * Unfortunately we have to return directly a python object wrapping the appropiate
@@ -111,22 +108,22 @@ public:
   }
 
 private:
-  unsigned m_pos;
+  unsigned     m_pos;
   AttributeSet m_attrs;
 
   struct AttrGetterFactory : public boost::static_visitor<boost::python::object> {
-    unsigned m_pos;
+    unsigned    m_pos;
     std::string m_name;
 
     AttrGetterFactory(unsigned pos, const std::string& name) : m_pos{pos}, m_name{name} {}
 
-    template<typename Content>
+    template <typename Content>
     boost::python::object operator()(Content) const {
       std::shared_ptr<Node<Content>> node = std::make_shared<AttrGetter<Content>>(m_pos, m_name);
       return boost::python::object(node);
     }
   };
 };
-}
+}  // namespace Pyston
 
-#endif //PYSTON_ATTRIBUTESET_H
+#endif  // PYSTON_ATTRIBUTESET_H

@@ -19,14 +19,14 @@
 #ifndef PYSTON_PYTHONFIXTURE_H
 #define PYSTON_PYTHONFIXTURE_H
 
-#include <iomanip>
-#include <boost/python/object.hpp>
-#include <boost/python/import.hpp>
-#include <boost/python/exec.hpp>
-#include <boost/python/extract.hpp>
-#include <Pyston/Util/GraphvizGenerator.h>
 #include "Pyston/Module.h"
 #include "Pyston/Util/TextReprVisitor.h"
+#include <Pyston/Util/GraphvizGenerator.h>
+#include <boost/python/exec.hpp>
+#include <boost/python/extract.hpp>
+#include <boost/python/import.hpp>
+#include <boost/python/object.hpp>
+#include <iomanip>
 
 namespace Pyston {
 
@@ -43,31 +43,31 @@ struct PythonFixture {
   };
 
   boost::python::object main_namespace;
-  PyGILState_STATE gil_state;
+  PyGILState_STATE      gil_state;
 
   PythonFixture() {
     static Singleton singleton;
-    gil_state = PyGILState_Ensure();
-    auto main_module = boost::python::import("__main__");
-    main_namespace = main_module.attr("__dict__");
+    gil_state                = PyGILState_Ensure();
+    auto main_module         = boost::python::import("__main__");
+    main_namespace           = main_module.attr("__dict__");
     main_namespace["pyston"] = boost::python::import("pyston");
-    main_namespace["np"] = boost::python::import("numpy");
-    main_namespace["np"] = boost::python::import("numpy");
+    main_namespace["np"]     = boost::python::import("numpy");
+    main_namespace["np"]     = boost::python::import("numpy");
   }
 
   ~PythonFixture() {
     PyGILState_Release(gil_state);
   }
 
-  template<typename T>
+  template <typename T>
   std::string textRepr(const std::shared_ptr<Node<T>>& root) const {
     std::stringstream text_stream;
-    TextReprVisitor text_visitor{text_stream};
+    TextReprVisitor   text_visitor{text_stream};
     root->visit(text_visitor);
     return text_stream.str();
   }
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_PYTHONFIXTURE_H
+#endif  // PYSTON_PYTHONFIXTURE_H

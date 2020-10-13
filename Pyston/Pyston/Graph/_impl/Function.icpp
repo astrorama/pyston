@@ -20,55 +20,53 @@
 
 namespace Pyston {
 
-template<typename R, size_t N, typename ...Evaluated>
+template <typename R, size_t N, typename... Evaluated>
 struct FunctionEvalHelper {
-  template<typename Functor, typename ChildrenSet>
-  static R eval(const Context& context, const Arguments& args, const Functor& functor,
-                const ChildrenSet& children, Evaluated&&... evaluated) {
+  template <typename Functor, typename ChildrenSet>
+  static R eval(const Context& context, const Arguments& args, const Functor& functor, const ChildrenSet& children,
+                Evaluated&&... evaluated) {
     auto a = std::get<N - 1>(children)->eval(context, args);
     return FunctionEvalHelper<R, N - 1, decltype(a), Evaluated...>::eval(
-      context, args, functor, children, std::forward<decltype(a)>(a), std::forward<Evaluated>(evaluated)...
-    );
+        context, args, functor, children, std::forward<decltype(a)>(a), std::forward<Evaluated>(evaluated)...);
   }
 };
 
-template<typename R, typename... Evaluated>
+template <typename R, typename... Evaluated>
 struct FunctionEvalHelper<R, 0, Evaluated...> {
-  template<typename Functor, typename ChildrenSet>
-  static R eval(const Context& context, const Arguments&, const Functor& functor,
-                const ChildrenSet&, Evaluated&&... evaluated) {
+  template <typename Functor, typename ChildrenSet>
+  static R eval(const Context& context, const Arguments&, const Functor& functor, const ChildrenSet&,
+                Evaluated&&... evaluated) {
     return functor(context, std::forward<Evaluated>(evaluated)...);
   }
 };
 
-template<size_t N>
+template <size_t N>
 struct FunctionVisitHelper {
-  template<typename ChildrenSet>
+  template <typename ChildrenSet>
   static void visit(Visitor& visitor, const ChildrenSet& children) {
-    FunctionVisitHelper<N-1>::visit(visitor, children);
-    std::get<N-1>(children)->visit(visitor);
+    FunctionVisitHelper<N - 1>::visit(visitor, children);
+    std::get<N - 1>(children)->visit(visitor);
   }
 };
 
-template<>
+template <>
 struct FunctionVisitHelper<0> {
-  template<typename ChildrenSet>
-  static void visit(Visitor&, const ChildrenSet&) {
-  }
+  template <typename ChildrenSet>
+  static void visit(Visitor&, const ChildrenSet&) {}
 };
 
-template<typename R, typename ...Args>
+template <typename R, typename... Args>
 R Function<R, Args...>::eval(const Context& context, const Arguments& args) const {
   return FunctionEvalHelper<R, sizeof...(Args)>::eval(context, args, m_functor, m_children);
 }
 
-template<typename R, typename ...Args>
+template <typename R, typename... Args>
 void Function<R, Args...>::visit(Visitor& visitor) const {
   visitor.enter(this);
   FunctionVisitHelper<sizeof...(Args)>::visit(visitor, m_children);
   visitor.exit(this);
 }
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
 #endif

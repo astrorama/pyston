@@ -34,10 +34,10 @@ namespace Pyston {
  * @tparam T
  *  Operator parameter type
  */
-template<typename R, typename... Args>
+template <typename R, typename... Args>
 class Function : public Node<R> {
 public:
-  using functor_t = std::function<R(const Context&, Args...)>;
+  using functor_t  = std::function<R(const Context&, Args...)>;
   using children_t = std::tuple<std::shared_ptr<Node<Args>>...>;
 
   /**
@@ -51,7 +51,7 @@ public:
    */
   Function(const std::string& repr, std::function<R(const Context&, Args...)> functor,
            const std::shared_ptr<Node<Args>>... args)
-  : m_repr{repr}, m_functor{functor}, m_children{args...} {}
+      : m_repr{repr}, m_functor{functor}, m_children{args...} {}
 
   /**
    * @copydoc Node::repr
@@ -72,12 +72,11 @@ public:
 
 private:
   std::string m_repr;
-  functor_t m_functor;
-  children_t m_children;
+  functor_t   m_functor;
+  children_t  m_children;
 };
 
-
-template<typename Signature>
+template <typename Signature>
 class FunctionFactory;
 
 /**
@@ -88,7 +87,7 @@ class FunctionFactory;
  * @tparam T
  *  Type corresponding to the received Node
  */
-template<typename R, typename ...Args>
+template <typename R, typename... Args>
 class FunctionFactory<R(Args...)> {
 public:
   /**
@@ -99,8 +98,7 @@ public:
    *    Human readable representation of the operator
    */
   FunctionFactory(const std::string& repr, std::function<R(const Context&, Args...)> functor)
-    : m_repr{repr}, m_functor{functor} {
-  }
+      : m_repr{repr}, m_functor{functor} {}
 
   /**
    * Callable that creates the Node
@@ -109,19 +107,19 @@ public:
    *    trigger a call `factory(a)`. Unlike the BinaryOperatorFactory, this will *not* be called
    *    is a is not of type Node, since there would be no reason to!
    */
-  std::shared_ptr<Node<R>> operator() (const std::shared_ptr<Node<Args>>&... nodes) const {
+  std::shared_ptr<Node<R>> operator()(const std::shared_ptr<Node<Args>>&... nodes) const {
     return std::make_shared<Function<R, Args...>>(m_repr, m_functor, nodes...);
   }
 
 protected:
-  std::string m_repr;
+  std::string                               m_repr;
   std::function<R(const Context&, Args...)> m_functor;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
 #define PYSTON_GRAPH_FUNCTION_IMPL
 #include "_impl/Function.icpp"
 #undef PYSTON_GRAPH_FUNCTION_IMPL
 
-#endif //PYSTON_FUNCTION_H
+#endif  // PYSTON_FUNCTION_H

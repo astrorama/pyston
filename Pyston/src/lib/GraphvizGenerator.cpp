@@ -26,14 +26,11 @@ static std::string escape(const std::string& str) {
 }
 
 GraphvizGenerator::GraphvizGenerator(const std::string& label) : m_unique_id(0) {
-  m_stream << "digraph G {" << std::endl
-           << "\tlabel=\"" << escape(label) << "\"" << std::endl;
+  m_stream << "digraph G {" << std::endl << "\tlabel=\"" << escape(label) << "\"" << std::endl;
 }
 
-void GraphvizGenerator::enter(const NodeBase *node) {
-  m_stream << "\t" << '"' << m_unique_id << '"'
-           << " [label=\"" << escape(node->repr()) << "\"];"
-           << std::endl;
+void GraphvizGenerator::enter(const NodeBase* node) {
+  m_stream << "\t" << '"' << m_unique_id << '"' << " [label=\"" << escape(node->repr()) << "\"];" << std::endl;
   if (!m_stack.empty()) {
     m_stream << "\t\"" << m_stack.back() << '"' << " -> \"" << m_unique_id << "\"" << std::endl;
   }
@@ -41,7 +38,7 @@ void GraphvizGenerator::enter(const NodeBase *node) {
   ++m_unique_id;
 }
 
-void GraphvizGenerator::exit(const NodeBase *) {
+void GraphvizGenerator::exit(const NodeBase*) {
   m_stack.pop_back();
 }
 
@@ -49,4 +46,4 @@ std::string GraphvizGenerator::str() const {
   return m_stream.str() + "}";
 }
 
-} // end of namespace Pyston
+}  // end of namespace Pyston

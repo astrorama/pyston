@@ -19,10 +19,10 @@
 #ifndef PYSTON_EXCEPTIONRAISER_H
 #define PYSTON_EXCEPTIONRAISER_H
 
+#include "Pyston/Graph/Node.h"
+#include <boost/python/errors.hpp>
 #include <memory>
 #include <string>
-#include <boost/python/errors.hpp>
-#include "Pyston/Graph/Node.h"
 
 namespace Pyston {
 
@@ -32,7 +32,7 @@ namespace Pyston {
  * @tparam T
  *  Node type
  */
-template<typename T>
+template <typename T>
 class ExceptionRaiser {
 public:
   /**
@@ -56,6 +56,6 @@ private:
   std::string m_msg;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_EXCEPTIONRAISER_H
+#endif  // PYSTON_EXCEPTIONRAISER_H

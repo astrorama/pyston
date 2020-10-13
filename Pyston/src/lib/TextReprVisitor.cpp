@@ -21,41 +21,35 @@
 
 namespace Pyston {
 
-TextReprVisitor::TextReprVisitor(std::ostream& out_stream) : m_stream(out_stream) {
-}
+TextReprVisitor::TextReprVisitor(std::ostream& out_stream) : m_stream(out_stream) {}
 
-void TextReprVisitor::enter(const NodeBase *) {
+void TextReprVisitor::enter(const NodeBase*) {
   m_stack.push_back({});
 }
 
-void TextReprVisitor::exit(const NodeBase *node) {
-  const auto& children = m_stack.back();
+void TextReprVisitor::exit(const NodeBase* node) {
+  const auto&        children = m_stack.back();
   std::ostringstream self_repr;
-  std::string node_repr = node->repr();
+  std::string        node_repr = node->repr();
 
   if (children.size() == 1 && node_repr.size() == 1) {
     self_repr << node->repr() << children.front();
-  }
-  else if (children.size() == 1) {
+  } else if (children.size() == 1) {
     self_repr << node->repr() << '(' << children.front() << ')';
-  }
-  else if (children.size() == 2 && node_repr.size() == 1) {
+  } else if (children.size() == 2 && node_repr.size() == 1) {
     self_repr << '(' << children.front() << ' ' << node->repr() << ' ' << children.back() << ')';
-  }
-  else if (children.size() == 2) {
+  } else if (children.size() == 2) {
     self_repr << node->repr() << '(' << children.front() << ", " << children.back() << ')';
-  }
-  else {
+  } else {
     self_repr << node->repr();
   }
 
   m_stack.pop_back();
   if (!m_stack.empty()) {
     m_stack.back().push_back(self_repr.str());
-  }
-  else {
+  } else {
     m_stream << self_repr.str();
   }
 }
 
-} // end of namespace Pyston
+}  // end of namespace Pyston

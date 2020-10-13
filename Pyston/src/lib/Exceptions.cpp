@@ -16,18 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "Pyston/Exceptions.h"
 #include <Python.h>
 #include <boost/python/extract.hpp>
 #include <boost/python/handle.hpp>
 #include <boost/python/object.hpp>
-#include "Pyston/Exceptions.h"
 
 namespace py = boost::python;
 
 namespace Pyston {
 
 Exception::Exception() {
-  PyObject * ptype, *pvalue, *ptraceback;
+  PyObject *ptype, *pvalue, *ptraceback;
   PyErr_Fetch(&ptype, &pvalue, &ptraceback);
   PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
 
@@ -48,11 +48,9 @@ Exception::Exception() {
     py::object traceback(handle_traceback);
     while (traceback) {
       Location loc;
-      loc.lineno = py::extract<long>(traceback.attr("tb_lineno"));
-      loc.filename = py::extract<std::string>(
-        traceback.attr("tb_frame").attr("f_code").attr("co_filename"));
-      loc.funcname = py::extract<std::string>(
-        traceback.attr("tb_frame").attr("f_code").attr("co_name"));
+      loc.lineno   = py::extract<long>(traceback.attr("tb_lineno"));
+      loc.filename = py::extract<std::string>(traceback.attr("tb_frame").attr("f_code").attr("co_filename"));
+      loc.funcname = py::extract<std::string>(traceback.attr("tb_frame").attr("f_code").attr("co_name"));
 
       m_traceback.emplace_back(loc);
 
@@ -77,4 +75,4 @@ const Exception& Exception::log(log4cpp::Priority::Value level, Elements::Loggin
   return *this;
 }
 
-} // end of namespace Pyston
+}  // end of namespace Pyston

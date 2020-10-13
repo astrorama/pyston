@@ -16,10 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include <boost/test/unit_test.hpp>
 #include "Pyston/Graph/Node.h"
 #include "Pyston/Graph/Placeholder.h"
 #include "PythonFixture.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace Pyston;
 namespace py = boost::python;
@@ -29,10 +29,10 @@ BOOST_AUTO_TEST_SUITE(UnaryOperator_test)
 BOOST_FIXTURE_TEST_CASE(UnaryDouble_test, PythonFixture) {
   auto negative = py::eval("lambda x: -x", main_namespace);
   auto identity = py::eval("lambda x: +x", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>(0);
+  auto X        = std::make_shared<Placeholder<double>>(0);
 
   auto py_negative_comp = negative(X);
-  auto py_identiy_comp = identity(X);
+  auto py_identiy_comp  = identity(X);
 
   py::extract<std::shared_ptr<Node<double>>> negative_comp(py_negative_comp);
   py::extract<std::shared_ptr<Node<double>>> identity_comp(py_identiy_comp);
@@ -47,10 +47,10 @@ BOOST_FIXTURE_TEST_CASE(UnaryDouble_test, PythonFixture) {
 BOOST_FIXTURE_TEST_CASE(UnaryInt_test, PythonFixture) {
   auto negative = py::eval("lambda x: -x", main_namespace);
   auto identity = py::eval("lambda x: +x", main_namespace);
-  auto X = std::make_shared<Placeholder<int64_t>>(0);
+  auto X        = std::make_shared<Placeholder<int64_t>>(0);
 
   auto py_negative_comp = negative(X);
-  auto py_identiy_comp = identity(X);
+  auto py_identiy_comp  = identity(X);
 
   py::extract<std::shared_ptr<Node<int64_t>>> negative_comp(py_negative_comp);
   py::extract<std::shared_ptr<Node<int64_t>>> identity_comp(py_identiy_comp);
@@ -66,7 +66,7 @@ BOOST_FIXTURE_TEST_CASE(Functions_test, PythonFixture) {
   auto log = py::eval("lambda x: np.log(x)", main_namespace);
   auto abs = py::eval("lambda x: np.abs(x)", main_namespace);
   auto cos = py::eval("lambda x: np.cos(x)", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>(0);
+  auto X   = std::make_shared<Placeholder<double>>(0);
 
   auto py_log_comp = log(X);
   auto py_abs_comp = abs(X);
@@ -82,8 +82,7 @@ BOOST_FIXTURE_TEST_CASE(Functions_test, PythonFixture) {
   auto nan = std::numeric_limits<double>::quiet_NaN();
   if (nan != nan) {
     BOOST_CHECK(std::isnan(log_comp()->eval(-10.)));
-  }
-  else {
+  } else {
     BOOST_TEST_MESSAGE("nan == nan, compiled with -ffinite-math-only?");
   }
 
@@ -96,7 +95,7 @@ BOOST_FIXTURE_TEST_CASE(Functions_test, PythonFixture) {
 
 BOOST_FIXTURE_TEST_CASE(Visit_test, PythonFixture) {
   auto func = py::eval("lambda x: +np.log(-x)", main_namespace);
-  auto X = std::make_shared<Placeholder<double>>(0);
+  auto X    = std::make_shared<Placeholder<double>>(0);
 
   auto py_comp = func(X);
 

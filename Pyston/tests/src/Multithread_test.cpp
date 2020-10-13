@@ -16,15 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include <boost/test/unit_test.hpp>
-#include <boost/thread.hpp>
 #include "Pyston/ExpressionTreeBuilder.h"
 #include "PythonFixture.h"
+#include <boost/test/unit_test.hpp>
+#include <boost/thread.hpp>
 
 using namespace Pyston;
 namespace py = boost::python;
 
-static const int NTHREADS = 8;
+static const int NTHREADS    = 8;
 static const int NITERATIONS = 20;
 
 /**
@@ -34,7 +34,7 @@ static const int NITERATIONS = 20;
 struct Worker {
   struct Evaluation {
     std::array<double, 3> params;
-    double result;
+    double                result;
 
     Evaluation() {
       for (size_t i = 0; i < params.size(); ++i) {
@@ -44,23 +44,21 @@ struct Worker {
     }
   };
 
-  Worker(int id, std::function<double(double, double, double)> functor)
-    : m_thread_id(id), m_functor(functor) {}
+  Worker(int id, std::function<double(double, double, double)> functor) : m_thread_id(id), m_functor(functor) {}
 
   Worker(const Worker&) = delete;
 
   void run(void) {
     for (int i = 0; i < NITERATIONS; ++i) {
       Evaluation evaluation;
-      evaluation.result = m_functor(
-        evaluation.params[0], evaluation.params[1], evaluation.params[2]);
+      evaluation.result = m_functor(evaluation.params[0], evaluation.params[1], evaluation.params[2]);
       m_evaluations.emplace_back(evaluation);
     }
   }
 
-  int m_thread_id;
+  int                                           m_thread_id;
   std::function<double(double, double, double)> m_functor;
-  std::vector<Evaluation> m_evaluations;
+  std::vector<Evaluation>                       m_evaluations;
 };
 
 /**
@@ -78,8 +76,7 @@ BOOST_AUTO_TEST_SUITE(Multithread_test)
  */
 BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  auto py_func = py::eval("lambda x, y, z: (z > 0.5) * np.sin(x) + (z <= 0.5) * np.log(y)",
-                          main_namespace);
+  auto py_func = py::eval("lambda x, y, z: (z > 0.5) * np.sin(x) + (z <= 0.5) * np.log(y)", main_namespace);
 
   std::function<double(double, double, double)> func;
   {
@@ -90,7 +87,7 @@ BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
   }
 
   std::vector<std::unique_ptr<Worker>> workers;
-  boost::thread_group thread_group;
+  boost::thread_group                  thread_group;
   for (int i = 0; i < NTHREADS; ++i) {
     workers.emplace_back(new Worker(i, func));
     thread_group.create_thread(std::bind(&Worker::run, workers.back().get()));
@@ -119,9 +116,10 @@ def with_conditional(x, y, z):
     return np.sin(x)
   else:
     return np.log(y)
-)PYCODE", main_namespace);
+)PYCODE",
+           main_namespace);
 
-  auto py_func = main_namespace["with_conditional"];
+  auto                                          py_func = main_namespace["with_conditional"];
   std::function<double(double, double, double)> func;
   {
     auto tree = builder.build<double(double, double, double)>(py_func);
@@ -132,7 +130,7 @@ def with_conditional(x, y, z):
 
   std::vector<std::unique_ptr<Worker>> workers;
   {
-    GILReleaser releaser(gil_state);
+    GILReleaser         releaser(gil_state);
     boost::thread_group thread_group;
     for (int i = 0; i < NTHREADS; ++i) {
       workers.emplace_back(new Worker(i, func));

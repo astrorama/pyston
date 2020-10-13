@@ -16,10 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include <boost/test/unit_test.hpp>
 #include "Pyston/ExpressionTreeBuilder.h"
 #include "Pyston/Graph/Functors.h"
 #include "PythonFixture.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace Pyston;
 namespace py = boost::python;
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_SUITE(FunctionWrapper_test)
  */
 BOOST_FIXTURE_TEST_CASE(Wrapper_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  auto py_func = py::eval("lambda x, y: x**2 + y");
+  auto                  py_func = py::eval("lambda x, y: x**2 + y");
 
   std::function<double(double, double)> transparent;
   {
@@ -53,7 +53,7 @@ BOOST_FIXTURE_TEST_CASE(Wrapper_test, PythonFixture) {
  */
 BOOST_FIXTURE_TEST_CASE(WrapperFallback_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  auto py_func = py::eval("lambda x, y, z: x ** 2 + y if z > 0.5 else z", main_namespace);
+  auto                  py_func = py::eval("lambda x, y, z: x ** 2 + y if z > 0.5 else z", main_namespace);
 
   std::function<double(double, double, double)> transparent;
   // Call directly
@@ -81,12 +81,13 @@ def raises_exception(x, y, z):
     return x **2 + y
   else:
     raise ValueError('Invalid Z value')
-)PYCODE", main_namespace);
+)PYCODE",
+           main_namespace);
 
   std::function<double(double, double, double)> transparent;
   {
     auto py_func = main_namespace["raises_exception"];
-    auto tree = builder.build<double(double, double, double)>(py_func);
+    auto tree    = builder.build<double(double, double, double)>(py_func);
     BOOST_CHECK(!tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -99,8 +100,7 @@ def raises_exception(x, y, z):
   try {
     transparent(1, 2, 0.4);
     BOOST_FAIL("Call should have raised an exception");
-  }
-  catch (const Exception& ex) {
+  } catch (const Exception& ex) {
     BOOST_CHECK_EQUAL(std::string(ex.what()), "Invalid Z value");
     BOOST_CHECK_GT(ex.getTraceback().size(), 0);
     bool func_in_trace = false;
@@ -115,7 +115,7 @@ def raises_exception(x, y, z):
 /**
  * Custom functions
  */
-template<typename T>
+template <typename T>
 struct World2Pixel {
   T operator()(const Context& context, T x) const {
     double scale = 3.;
@@ -134,18 +134,18 @@ double mishmash(double x, double y) {
  */
 BOOST_FIXTURE_TEST_CASE(AddUnaryFunction_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  builder.registerFunction < double(
-  const Context&, double)>("world2pixel", World2Pixel<double>());
+  builder.registerFunction<double(const Context&, double)>("world2pixel", World2Pixel<double>());
 
   py::exec(R"PYCODE(
 def uses_function(x, y):
   return pyston.world2pixel(x + y)
-)PYCODE", main_namespace);
+)PYCODE",
+           main_namespace);
 
   std::function<double(const Context&, double, double)> transparent;
   {
     auto py_func = main_namespace["uses_function"];
-    auto tree = builder.build<double(double, double)>(py_func);
+    auto tree    = builder.build<double(double, double)>(py_func);
     BOOST_CHECK(tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -164,8 +164,7 @@ def uses_function(x, y):
  */
 BOOST_FIXTURE_TEST_CASE(AddUnaryFunctionNonCompilable_test, PythonFixture) {
   ExpressionTreeBuilder builder;
-  builder.registerFunction < double(
-  const Context&, double)>("world2pixel", World2Pixel<double>());
+  builder.registerFunction<double(const Context&, double)>("world2pixel", World2Pixel<double>());
 
   py::exec(R"PYCODE(
 def uses_function(x, y):
@@ -173,12 +172,13 @@ def uses_function(x, y):
     return pyston.world2pixel(x + y)
   else:
     return y
-)PYCODE", main_namespace);
+)PYCODE",
+           main_namespace);
 
   std::function<double(const Context&, double, double)> transparent;
   {
     auto py_func = main_namespace["uses_function"];
-    auto tree = builder.build<double(double, double)>(py_func);
+    auto tree    = builder.build<double(double, double)>(py_func);
     BOOST_CHECK(!tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -201,12 +201,13 @@ BOOST_FIXTURE_TEST_CASE(AddBinaryFunction_test, PythonFixture) {
   py::exec(R"PYCODE(
 def uses_function(x, y):
   return pyston.mishmash(x * 2, y)
-)PYCODE", main_namespace);
+)PYCODE",
+           main_namespace);
 
   std::function<double(double, double)> transparent;
   {
     auto py_func = main_namespace["uses_function"];
-    auto tree = builder.build<double(double, double)>(py_func);
+    auto tree    = builder.build<double(double, double)>(py_func);
     BOOST_CHECK(tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -230,12 +231,13 @@ def uses_function(x, y):
     return pyston.mishmash(x * 2, y)
   else:
     return -1
-)PYCODE", main_namespace);
+)PYCODE",
+           main_namespace);
 
   std::function<double(double, double)> transparent;
   {
     auto py_func = main_namespace["uses_function"];
-    auto tree = builder.build<double(double, double)>(py_func);
+    auto tree    = builder.build<double(double, double)>(py_func);
     BOOST_CHECK(!tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
@@ -254,7 +256,7 @@ def uses_function(x, y):
 BOOST_FIXTURE_TEST_CASE(WithObject_test, PythonFixture) {
   ExpressionTreeBuilder builder;
 
-  auto py_func = py::eval("lambda o, y: np.log(o.flux) * y", main_namespace);
+  auto         py_func = py::eval("lambda o, y: np.log(o.flux) * y", main_namespace);
   AttributeSet prototype{{"flux", 0.}};
 
   std::function<double(AttributeSet, double)> transparent;
@@ -266,7 +268,7 @@ BOOST_FIXTURE_TEST_CASE(WithObject_test, PythonFixture) {
   }
 
   prototype["flux"] = 42.;
-  double r = transparent(prototype, 5);
+  double r          = transparent(prototype, 5);
   BOOST_CHECK_CLOSE(r, 18.68835, 1e-4);
 }
 
@@ -282,24 +284,25 @@ def non_compilable(o, y):
     return np.log(o.flux)
   else:
     return y
-)PYCODE", main_namespace);
+)PYCODE",
+           main_namespace);
 
-  AttributeSet prototype{{"flux", 0.}};
+  AttributeSet                                prototype{{"flux", 0.}};
   std::function<double(AttributeSet, double)> transparent;
   {
     auto py_func = main_namespace["non_compilable"];
-    auto tree = builder.build<double(AttributeSet, double)>(py_func, prototype);
+    auto tree    = builder.build<double(AttributeSet, double)>(py_func, prototype);
     BOOST_CHECK(!tree.isCompiled());
     BOOST_TEST_MESSAGE(textRepr(tree.getTree()));
     transparent = tree;
   }
 
   prototype["flux"] = 88.;
-  double r = transparent(prototype, 5);
+  double r          = transparent(prototype, 5);
   BOOST_CHECK_CLOSE(r, 4.477337, 1e-4);
 
   prototype["flux"] = -4.;
-  r = transparent(prototype, 5);
+  r                 = transparent(prototype, 5);
   BOOST_CHECK_CLOSE(r, 5, 1e-8);
 }
 
@@ -309,7 +312,7 @@ def non_compilable(o, y):
 BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
   ExpressionTreeBuilder builder;
 
-  auto py_func = py::eval("lambda o, y: np.log(o.flux) * y", main_namespace);
+  auto         py_func = py::eval("lambda o, y: np.log(o.flux) * y", main_namespace);
   AttributeSet prototype{{"flux", 0.}};
 
   std::function<double(const AttributeSet&, double)> transparent;
@@ -321,7 +324,7 @@ BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
   }
 
   prototype["flux"] = 42.;
-  double r = transparent(prototype, 5);
+  double r          = transparent(prototype, 5);
   BOOST_CHECK_CLOSE(r, 18.68835, 1e-4);
 }
 
@@ -331,7 +334,7 @@ BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
 BOOST_FIXTURE_TEST_CASE(WithVectorOfDouble_test, PythonFixture) {
   ExpressionTreeBuilder builder;
 
-  auto py_func = py::eval("lambda x, y, z: x + y + z", main_namespace);
+  auto                                              py_func = py::eval("lambda x, y, z: x + y + z", main_namespace);
   std::function<double(const std::vector<double>&)> transparent;
   {
     auto tree = builder.build<double(const std::vector<double>&)>(py_func, 3);

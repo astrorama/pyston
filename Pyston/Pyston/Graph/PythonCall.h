@@ -32,11 +32,10 @@ namespace Pyston {
  * A PythonCall node hides a call to a wrapped Python function when
  * the tree can not be evaluated
  */
-template<typename T>
+template <typename T>
 class PythonCall : public Node<T> {
 public:
-  PythonCall(boost::python::object callable) : m_callable(callable) {
-  }
+  PythonCall(boost::python::object callable) : m_callable(callable) {}
 
   std::string repr() const override {
     return "PythonCall";
@@ -52,13 +51,12 @@ public:
     sharedContext = context;
     try {
       boost::python::list py_args;
-      for (auto& a :arguments) {
+      for (auto& a : arguments) {
         py_args.append(boost::apply_visitor(to_python_visitor(), a));
       }
       auto obj = m_callable(*boost::python::tuple(py_args));
       return boost::python::extract<T>(obj);
-    }
-    catch (const boost::python::error_already_set&) {
+    } catch (const boost::python::error_already_set&) {
       throw Exception();
     }
   }
@@ -68,7 +66,7 @@ private:
    * Unroll the variant type into a python type
    */
   struct to_python_visitor : public boost::static_visitor<boost::python::object> {
-    template<typename From>
+    template <typename From>
     boost::python::object operator()(From v) const {
       return boost::python::object(v);
     }
@@ -77,6 +75,6 @@ private:
   boost::python::object m_callable;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_PYTHONCALL_H
+#endif  // PYSTON_PYTHONCALL_H

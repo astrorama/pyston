@@ -42,7 +42,7 @@ struct GILLocker {
  * RAII for the Global Interlock: Releases at construction and locks at destruction
  */
 struct GILReleaser {
-  GILReleaser(PyGILState_STATE& state): m_state(state) {
+  GILReleaser(PyGILState_STATE& state) : m_state(state) {
     PyGILState_Release(m_state);
   }
 
@@ -50,9 +50,9 @@ struct GILReleaser {
     m_state = PyGILState_Ensure();
   }
 
-  PyGILState_STATE &m_state;
+  PyGILState_STATE& m_state;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_GIL_H
+#endif  // PYSTON_GIL_H

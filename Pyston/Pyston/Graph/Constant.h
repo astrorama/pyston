@@ -28,7 +28,7 @@ namespace Pyston {
  * @tparam T
  *  The type of the constant
  */
-template<typename T>
+template <typename T>
 class Constant : public Node<T> {
 public:
   /**
@@ -66,6 +66,6 @@ private:
   T m_value;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_CONSTANT_H
+#endif  // PYSTON_CONSTANT_H

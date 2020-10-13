@@ -28,17 +28,15 @@ namespace Pyston {
  * @tparam T
  *  Type of the placeholder
  */
-template<typename T>
+template <typename T>
 class Placeholder : public Node<T> {
 public:
-
   /**
    * Constructor
    * @param pos
    *    Position of the Placeholder. It will be used to retrieve later the value assigned to it.
    */
-  explicit Placeholder(const unsigned pos) : m_pos{pos} {
-  }
+  explicit Placeholder(const unsigned pos) : m_pos{pos} {}
 
   /**
    * @copydoc Node::repr
@@ -71,6 +69,6 @@ private:
   unsigned m_pos;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_PLACEHOLDER_H
+#endif  // PYSTON_PLACEHOLDER_H

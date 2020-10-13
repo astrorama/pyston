@@ -16,10 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include <boost/test/unit_test.hpp>
 #include "Pyston/Exceptions.h"
 #include "Pyston/Graph/AttributeSet.h"
 #include "PythonFixture.h"
+#include <boost/test/unit_test.hpp>
 
 using namespace Pyston;
 namespace py = boost::python;
@@ -30,12 +30,12 @@ BOOST_AUTO_TEST_SUITE(AttributeSet_test)
  * Base case, all good
  */
 BOOST_FIXTURE_TEST_CASE(GoodAttribute_test, PythonFixture) {
-  auto add = py::eval("lambda o, y: 5 * o.flux + y");
+  auto         add = py::eval("lambda o, y: 5 * o.flux + y");
   AttributeSet prototype{{"flux", 0.}};
-  auto X = std::make_shared<Placeholder<AttributeSet>>(0, prototype);
-  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto         X = std::make_shared<Placeholder<AttributeSet>>(0, prototype);
+  auto         Y = std::make_shared<Placeholder<double>>(1);
 
-  auto py_comp = add(X, Y);
+  auto                                       py_comp = add(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
   BOOST_TEST_MESSAGE(textRepr(comp()));
@@ -49,10 +49,10 @@ BOOST_FIXTURE_TEST_CASE(GoodAttribute_test, PythonFixture) {
  * Ask for an unknown attribute
  */
 BOOST_FIXTURE_TEST_CASE(NoAttribute_test, PythonFixture) {
-  auto add = py::eval("lambda o, y: o.radius + y");
+  auto         add = py::eval("lambda o, y: o.radius + y");
   AttributeSet prototype{{"flux", 0.}};
-  auto X = std::make_shared<Placeholder<AttributeSet>>(0, prototype);
-  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto         X = std::make_shared<Placeholder<AttributeSet>>(0, prototype);
+  auto         Y = std::make_shared<Placeholder<double>>(1);
 
   BOOST_CHECK_THROW(add(X, Y), py::error_already_set);
   Exception e;
@@ -63,12 +63,12 @@ BOOST_FIXTURE_TEST_CASE(NoAttribute_test, PythonFixture) {
  * Pass the wrong set of attributes when calling the compiled version
  */
 BOOST_FIXTURE_TEST_CASE(NoAttributeCall_test, PythonFixture) {
-  auto add = py::eval("lambda o, y: o.flux + y");
+  auto         add = py::eval("lambda o, y: o.flux + y");
   AttributeSet prototype{{"flux", 0.}};
-  auto X = std::make_shared<Placeholder<AttributeSet>>(0, prototype);
-  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto         X = std::make_shared<Placeholder<AttributeSet>>(0, prototype);
+  auto         Y = std::make_shared<Placeholder<double>>(1);
 
-  auto py_comp = add(X, Y);
+  auto                                       py_comp = add(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
   BOOST_TEST_MESSAGE(textRepr(comp()));
@@ -82,8 +82,8 @@ BOOST_FIXTURE_TEST_CASE(NoAttributeCall_test, PythonFixture) {
  */
 BOOST_FIXTURE_TEST_CASE(InvalidArgument_test, PythonFixture) {
   auto add = py::eval("lambda o, y: o.flux + y");
-  auto X = std::make_shared<Placeholder<double>>(0);
-  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto X   = std::make_shared<Placeholder<double>>(0);
+  auto Y   = std::make_shared<Placeholder<double>>(1);
 
   BOOST_CHECK_THROW(add(X, Y), py::error_already_set);
   Exception e;
@@ -94,12 +94,12 @@ BOOST_FIXTURE_TEST_CASE(InvalidArgument_test, PythonFixture) {
  * Pass a wrong value on the AttributeSet
  */
 BOOST_FIXTURE_TEST_CASE(InvalidArgumentCall_test, PythonFixture) {
-  auto add = py::eval("lambda o, y: o.flux + y");
+  auto         add = py::eval("lambda o, y: o.flux + y");
   AttributeSet prototype{{"flux", 0.}};
-  auto X = std::make_shared<Placeholder<AttributeSet>>(0, prototype);
-  auto Y = std::make_shared<Placeholder<double>>(1);
+  auto         X = std::make_shared<Placeholder<AttributeSet>>(0, prototype);
+  auto         Y = std::make_shared<Placeholder<double>>(1);
 
-  auto py_comp = add(X, Y);
+  auto                                       py_comp = add(X, Y);
   py::extract<std::shared_ptr<Node<double>>> comp(py_comp);
 
   BOOST_TEST_MESSAGE(textRepr(comp()));
@@ -118,18 +118,19 @@ def with_conditional(o, y):
     return np.sqrt(o.flux) + y
   else:
     return o.flux - y**2
-)PYCODE", main_namespace);
+)PYCODE",
+           main_namespace);
 
-  auto py_func = main_namespace["with_conditional"];
+  auto         py_func = main_namespace["with_conditional"];
   AttributeSet prototype{{"flux", -2.}};
-  auto ret = py_func(prototype, 4.);
-  double rv = py::extract<double>(ret);
+  auto         ret = py_func(prototype, 4.);
+  double       rv  = py::extract<double>(ret);
 
   BOOST_CHECK_CLOSE(rv, -18., 1e-8);
 
   prototype["flux"] = 16l;
-  ret = py_func(prototype, 8.);
-  rv = py::extract<double>(ret);
+  ret               = py_func(prototype, 8.);
+  rv                = py::extract<double>(ret);
   BOOST_CHECK_CLOSE(rv, 12., 1e-8);
 }
 

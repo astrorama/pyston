@@ -19,18 +19,18 @@
 #ifndef PYSTON_EXPRESSIONTREE_H
 #define PYSTON_EXPRESSIONTREE_H
 
-#include <functional>
 #include "Pyston/Graph/Node.h"
+#include <functional>
 
 namespace Pyston {
 
 /*
  * Declaration to allow for function-like templates
  */
-template<typename Signature>
+template <typename Signature>
 class ExpressionTree;
 
-template<typename R>
+template <typename R>
 class ExpressionTreeBase {
 public:
   /**
@@ -46,7 +46,7 @@ public:
    * @return
    *    If isCompiled is false, return the reason for it
    */
-  const Exception *reason() const {
+  const Exception* reason() const {
     return m_reason.get();
   }
 
@@ -59,14 +59,12 @@ public:
   }
 
 protected:
-  bool m_is_compiled;
-  std::shared_ptr<Node<R>> m_root;
+  bool                       m_is_compiled;
+  std::shared_ptr<Node<R>>   m_root;
   std::shared_ptr<Exception> m_reason;
 
-  ExpressionTreeBase(bool compiled, const std::shared_ptr<Node<R>>& root,
-                     const std::shared_ptr<Exception>& reason)
-    : m_is_compiled{compiled}, m_root{root}, m_reason{reason} {
-  }
+  ExpressionTreeBase(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason)
+      : m_is_compiled{compiled}, m_root{root}, m_reason{reason} {}
 };
 
 /**
@@ -77,10 +75,9 @@ protected:
  * @tparam T
  *  Argument type
  */
-template<typename R, typename T>
+template <typename R, typename T>
 class ExpressionTree<R(const std::vector<T>&)> : public ExpressionTreeBase<R> {
 public:
-
   /**
    * Use the tree as a function
    * @param args
@@ -106,9 +103,8 @@ public:
 private:
   using ExpressionTreeBase<R>::m_root;
 
-  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root,
-                 const std::shared_ptr<Exception>& reason)
-    : ExpressionTreeBase<R>(compiled, root, reason) {}
+  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason)
+      : ExpressionTreeBase<R>(compiled, root, reason) {}
 
   friend class ExpressionTreeBuilder;
 };
@@ -120,16 +116,15 @@ private:
  * @tparam Args
  *  Argument types
  */
-template<typename R, typename ...Args>
+template <typename R, typename... Args>
 class ExpressionTree<R(Args...)> : public ExpressionTreeBase<R> {
 public:
-
   /**
    * Use the tree as a function
    * @param args
    *    Argument list
    */
-  R operator()(const Context& context, const Args& ...args) const {
+  R operator()(const Context& context, const Args&... args) const {
     return m_root->eval(context, args...);
   }
 
@@ -138,20 +133,19 @@ public:
    * @param args
    *    Argument list
    */
-  R operator()(const Args& ...args) const {
+  R operator()(const Args&... args) const {
     return m_root->eval(Context{}, args...);
   }
 
 private:
   using ExpressionTreeBase<R>::m_root;
 
-  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root,
-                 const std::shared_ptr<Exception>& reason)
-    : ExpressionTreeBase<R>(compiled, root, reason) {}
+  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason)
+      : ExpressionTreeBase<R>(compiled, root, reason) {}
 
   friend class ExpressionTreeBuilder;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_EXPRESSIONTREE_H
+#endif  // PYSTON_EXPRESSIONTREE_H

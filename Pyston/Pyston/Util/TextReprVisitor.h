@@ -19,8 +19,8 @@
 #ifndef PYSTON_TEXTREPRVISITOR_H
 #define PYSTON_TEXTREPRVISITOR_H
 
-#include <list>
 #include "Pyston/Graph//Node.h"
+#include <list>
 
 namespace Pyston {
 
@@ -40,18 +40,18 @@ public:
   /**
    * @copydoc Visitor::enter
    */
-  void enter(const NodeBase *base) override;
+  void enter(const NodeBase* base) override;
 
   /**
    * @copydoc Visitor::exit
    */
-  void exit(const NodeBase *node) override;
+  void exit(const NodeBase* node) override;
 
 protected:
-  std::ostream& m_stream;
+  std::ostream&                     m_stream;
   std::list<std::list<std::string>> m_stack;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif // PYSTON_TEXTREPRVISITOR_H
+#endif  // PYSTON_TEXTREPRVISITOR_H

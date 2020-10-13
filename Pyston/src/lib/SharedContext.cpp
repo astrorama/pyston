@@ -20,4 +20,4 @@
 
 namespace Pyston {
 thread_local Context sharedContext;
-} // end of namespace Pyston
+}  // end of namespace Pyston

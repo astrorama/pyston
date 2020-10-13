@@ -34,6 +34,6 @@ namespace Pyston {
  */
 extern thread_local Context sharedContext;
 
-}
+}  // namespace Pyston
 
-#endif //PYSTON_SHAREDCONTEXT_H
+#endif  // PYSTON_SHAREDCONTEXT_H

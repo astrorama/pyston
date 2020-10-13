@@ -38,16 +38,15 @@ namespace Pyston {
  * @tparam From
  *  Casted type
  */
-template<typename To, typename From>
-class Cast: public Node<To> {
+template <typename To, typename From>
+class Cast : public Node<To> {
 public:
   /**
    * Constructor
    * @param node
    *    Wrapped node, for which its eval result will be casted to To
    */
-  explicit Cast(const std::shared_ptr<Node<From>> &node): m_node{node} {
-  }
+  explicit Cast(const std::shared_ptr<Node<From>>& node) : m_node{node} {}
 
   /**
    * @copydoc Node::repr
@@ -76,6 +75,6 @@ private:
   std::shared_ptr<Node<From>> m_node;
 };
 
-} // end of namespace Pyston
+}  // end of namespace Pyston
 
-#endif //PYSTON_CAST_H
+#endif  // PYSTON_CAST_H

@@ -34,7 +34,7 @@ public:
   /// Traceback location
   struct Location {
     std::string filename, funcname;
-    long lineno;
+    long        lineno;
   };
 
   /**
@@ -59,7 +59,6 @@ private:
   std::list<Location> m_traceback;
 };
 
+}  // end of namespace Pyston
 
-} // end of namespace Pyston
-
-#endif //PYSTON_EXCEPTIONS_H
+#endif  // PYSTON_EXCEPTIONS_H
