@@ -209,7 +209,7 @@ void RegisterAttributeSet() {
   attr_set.def("__getattr__", &attributeSetGetter);
 }
 
-BOOST_PYTHON_MODULE(libPyston) {
+BOOST_PYTHON_MODULE(pyston) {
   RegisterNode<double>::Do();
   RegisterNode<int64_t>::Do();
   RegisterNode<bool>::Do();

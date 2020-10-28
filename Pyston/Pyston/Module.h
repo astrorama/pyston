@@ -25,17 +25,17 @@ extern "C" {
 /**
  * Method used by Python to import this library. It can be used directly when
  * embedding via:
- *    PyImport_AppendInittab("pyston", &PyInit_libPyston)
+ *    PyImport_AppendInittab("pyston", &PyInit_pyston)
  * This *must* be done before calling Py_Initialize
  */
 #if PY_MAJOR_VERSION >= 3
-PyObject* PyInit_libPyston(void);
+PyObject* PyInit_pyston(void);
 
-#define PYSTON_MODULE_INIT &PyInit_libPyston
+#define PYSTON_MODULE_INIT &PyInit_pyston
 #else
-void initlibPyston(void);
+void initpyston(void);
 
-#define PYSTON_MODULE_INIT &initlibPyston
+#define PYSTON_MODULE_INIT &initpyston
 #endif
 }
 
