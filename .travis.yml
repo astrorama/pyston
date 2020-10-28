@@ -23,8 +23,8 @@ services:
 
 before_script: |
   # Regular package and version
-  PACKAGE=$(grep elements_project CMakeLists.txt | sed 's/.*(//'| cut -d' ' -f1)
-  VERSION=$(grep elements_project CMakeLists.txt | sed 's/.*(//' | sed 's/[^ ]* //' | sed 's/ .*//')
+  PACKAGE=$(grep "^elements_project" CMakeLists.txt | sed 's/.*(//'| cut -d' ' -f1)
+  VERSION=$(grep "^elements_project" CMakeLists.txt | sed 's/.*(//' | sed 's/[^ ]* //' | sed 's/ .*//')
 
   if [ -n "${TRAVIS_TAG}" ]; then
     TARGET_REPO="master"
