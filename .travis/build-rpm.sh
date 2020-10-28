@@ -60,9 +60,10 @@ rpm_doc_deps=$(echo ${cmake_deps} | awk '{for(i=1;i<NF;i+=2){print $i "-doc-" $(
 yum install -y ${rpm_dev_deps} ${rpm_doc_deps}
 
 # Dependencies
-yum install -y cmake make gcc-c++ rpm-build
-yum install -y boost-devel $PYTHON-pytest log4cpp-devel doxygen $PYTHON-numpy
-yum install -y graphviz $PYTHON-sphinx
+yum install -y cmake make gcc-c++ rpm-build \
+  boost-devel $PYTHON-pytest log4cpp-devel doxygen \
+  ${PYTHON}-devel boost-${PYTHON}-devel $PYTHON-numpy \
+  graphviz $PYTHON-sphinx
 
 # Build
 mkdir -p /build
