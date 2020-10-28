@@ -36,10 +36,32 @@ using boost::core::demangle;
 
 namespace py = boost::python;
 
+#if BOOST_VERSION < 106300
+namespace boost {
+namespace python {
+namespace converter {
+
+template <class T>
+PyObject* shared_ptr_to_python(std::shared_ptr<T> const& x) {
+  if (!x)
+    return python::detail::none();
+  else if (shared_ptr_deleter* d = std::get_deleter<shared_ptr_deleter>(x))
+    return incref(get_pointer(d->owner));
+  else
+    return converter::registered<std::shared_ptr<T> const&>::converters.to_python(&x);
+}
+
+}  // namespace converter
+}  // namespace python
+}  // namespace boost
+#endif
+
 namespace Pyston {
 
 template <typename T>
 struct RegisterNode {
+
+  using NodeType = py::class_<Node<T>, boost::noncopyable>;
 
   /**
    * Define operations where the other value has a different type (To)
@@ -47,7 +69,7 @@ struct RegisterNode {
    * self has to be upcasted
    */
   template <typename To>
-  static void defCastOperations(py::class_<Node<T>, boost::noncopyable>& node) {
+  static void defCastOperations(NodeType& node) {
     node.def("__add__", makeBinaryFunction<To(To, To)>("+", std::plus<To>()))
         .def("__sub__", makeBinaryFunction<To(To, To)>("-", std::minus<To>()))
         .def("__mul__", makeBinaryFunction<To(To, To)>("*", std::multiplies<To>()))
@@ -62,13 +84,13 @@ struct RegisterNode {
    * Methods for specific types
    */
   template <typename Y>
-  static void specialized(py::class_<Node<Y>, boost::noncopyable>& node, void*);
+  static void specialized(NodeType& node, void*);
 
   /**
    * Methods for floating point types
    */
   template <typename Y>
-  static void specialized(py::class_<Node<Y>, boost::noncopyable>& node,
+  static void specialized(NodeType& node,
                           typename std::enable_if<std::is_floating_point<Y>::value>::type* = nullptr) {
     node.def("__pow__", makeFunction<T(T, T)>("^", Pow<T>()))
         .def("__rpow__", makeBinaryFunction<T(T, T)>("^", Pow<T>(), true))
@@ -103,7 +125,7 @@ struct RegisterNode {
    * Methods for the boolean type
    */
   template <typename Y>
-  static void specialized(py::class_<Node<Y>, boost::noncopyable>& node,
+  static void specialized(NodeType& node,
                           typename std::enable_if<std::is_same<Y, bool>::value>::type* = nullptr) {
     // Upcast to double and int
     defCastOperations<double>(node);
@@ -115,7 +137,7 @@ struct RegisterNode {
    */
   template <typename Y>
   static void
-  specialized(py::class_<Node<Y>, boost::noncopyable>& node,
+  specialized(NodeType& node,
               typename std::enable_if<std::is_integral<Y>::value && !std::is_same<Y, bool>::value>::type* = nullptr) {
     node.def("__abs__", makeFunction<T(T)>("abs", Abs<T>()));
     // Upcast to double
@@ -124,7 +146,7 @@ struct RegisterNode {
         .def("__rpow__", makeBinaryFunction<double(double, double)>("^", Pow<double>(), true));
   }
 
-  static void general(py::class_<Node<T>, boost::noncopyable>& node) {
+  static void general(NodeType& node) {
     // https://docs.python.org/3/reference/datamodel.html#basic-customization
     node.def("__lt__", makeFunction<bool(T, T)>("<", std::less<T>()))
         .def("__le__", makeFunction<bool(T, T)>("<=", std::less_equal<T>()))
@@ -138,22 +160,29 @@ struct RegisterNode {
         .def("__sub__", makeFunction<T(T, T)>("-", std::minus<T>()))
         .def("__mul__", makeFunction<T(T, T)>("*", std::multiplies<T>()))
         .def("__truediv__", makeFunction<T(T, T)>("/", std::divides<T>()))
+        .def("__div__", makeFunction<T(T, T)>("/", std::divides<T>()))
         .def("__radd__", makeBinaryFunction<T(T, T)>("+", std::plus<T>(), true))
         .def("__rsub__", makeBinaryFunction<T(T, T)>("-", std::minus<T>(), true))
         .def("__rmul__", makeBinaryFunction<T(T, T)>("*", std::multiplies<T>(), true))
         .def("__rtruediv__", makeBinaryFunction<T(T, T)>("/", std::divides<T>(), true))
+        .def("__rdiv__", makeBinaryFunction<T(T, T)>("/", std::divides<T>(), true))
         .def("__neg__", makeFunction<T(T)>("-", std::negate<T>()))
         .def("__pos__", makeFunction<T(T)>("+", (Identity<T>())));
 
     // Can not be used in conditionals!
-    node.def("__bool__", py::make_function(ExceptionRaiser<T>("Can not use variable placeholders in conditionals"),
-                                           py::default_call_policies(),
-                                           boost::mpl::vector<void, const std::shared_ptr<Node<T>>>()));
+#if PY_MAJOR_VERSION >= 3
+#define AS_BOOL_METHOD "__bool__"
+#else
+#define AS_BOOL_METHOD "__nonzero__"
+#endif
+    node.def(AS_BOOL_METHOD, py::make_function(ExceptionRaiser<T>("Can not use variable placeholders in conditionals"),
+                                               py::default_call_policies(),
+                                               boost::mpl::vector<void, const std::shared_ptr<Node<T>>>()));
   }
 
   static void Do() {
-    auto                                    node_name = std::string("Node<") + demangle(typeid(T).name()) + ">";
-    py::class_<Node<T>, boost::noncopyable> node(node_name.c_str(), "AST Node", py::no_init);
+    auto     node_name = std::string("Node<") + demangle(typeid(T).name()) + ">";
+    NodeType node(node_name.c_str(), "AST Node", py::no_init);
 
     // Operators and method applicable to all types
     general(node);
@@ -164,7 +193,9 @@ struct RegisterNode {
 
     // Register convertion between shared pointer and Node
     py::register_ptr_to_python<std::shared_ptr<Node<T>>>();
-
+#if BOOST_VERSION < 106300
+    py::implicitly_convertible<std::shared_ptr<Placeholder<T>>,std::shared_ptr<Node<T>>>();
+#endif
     // Custom conversion so primitive values can be converted to a node
     py::converter::registry::push_back(&NodeConverter<T>::isConvertible, &NodeConverter<T>::construct,
                                        py::type_id<std::shared_ptr<Node<T>>>());

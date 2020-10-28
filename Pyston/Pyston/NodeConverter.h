@@ -172,8 +172,15 @@ struct NodeConverter {
     using boost::python::converter::registry::query;
 
     // Primitive numeric types are ok
-    if (PyFloat_Check(obj_ptr) || PyLong_Check(obj_ptr) || PyBool_Check(obj_ptr))
+#if PY_MAJOR_VERSION >= 3
+    if (PyFloat_Check(obj_ptr) || PyLong_Check(obj_ptr) || PyBool_Check(obj_ptr)) {
       return obj_ptr;
+    }
+#else
+    if (PyFloat_Check(obj_ptr) || PyLong_Check(obj_ptr) || PyBool_Check(obj_ptr) || PyInt_Check(obj_ptr)) {
+      return obj_ptr;
+    }
+#endif
 
     // Upcasting one type of node to another is too
     if (NodeCast<T>::isUpcast(obj_ptr)) {
@@ -194,17 +201,21 @@ struct NodeConverter {
    *    true if it could be converted
    */
   static bool fromPrimitive(PyObject* obj_ptr, void* storage) {
-    if (!PyFloat_Check(obj_ptr) && !PyLong_Check(obj_ptr) && !PyBool_Check(obj_ptr))
-      return false;
-
     // Rely on the casting done by C++
     T value = 0;
-    if (PyFloat_Check(obj_ptr))
+    if (PyFloat_Check(obj_ptr)) {
       value = PyFloat_AsDouble(obj_ptr);
-    else if (PyLong_Check(obj_ptr))
+    } else if (PyLong_Check(obj_ptr)) {
       value = PyLong_AsLong(obj_ptr);
-    else if (PyBool_Check(obj_ptr))
+    } else if (PyBool_Check(obj_ptr)) {
       value = (obj_ptr == Py_True);
+#if PY_MAJOR_VERSION < 3
+    } else if (PyInt_Check(obj_ptr)) {
+      value = PyInt_AsLong(obj_ptr);
+#endif
+    } else {
+      return false;
+    }
 
     new (storage) std::shared_ptr<Node<T>>(new Constant<T>(value));
     return true;
