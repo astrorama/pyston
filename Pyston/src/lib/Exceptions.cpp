@@ -17,6 +17,7 @@
  */
 
 #include "Pyston/Exceptions.h"
+#include "Pyston/GIL.h"
 #include <Python.h>
 #include <boost/python/extract.hpp>
 #include <boost/python/handle.hpp>
@@ -27,6 +28,8 @@ namespace py = boost::python;
 namespace Pyston {
 
 Exception::Exception() {
+  GILLocker locker;
+
   PyObject *ptype, *pvalue, *ptraceback;
   PyErr_Fetch(&ptype, &pvalue, &ptraceback);
   PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
