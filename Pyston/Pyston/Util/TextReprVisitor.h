@@ -19,7 +19,7 @@
 #ifndef PYSTON_TEXTREPRVISITOR_H
 #define PYSTON_TEXTREPRVISITOR_H
 
-#include "Pyston/Graph//Node.h"
+#include "Pyston/Graph/Node.h"
 #include <list>
 
 namespace Pyston {

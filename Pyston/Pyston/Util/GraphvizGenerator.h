@@ -19,7 +19,7 @@
 #ifndef PYSTON_GRAPHVIZGENERATOR_H
 #define PYSTON_GRAPHVIZGENERATOR_H
 
-#include "Pyston/Graph//Node.h"
+#include "Pyston/Graph/Node.h"
 #include <list>
 #include <sstream>
 
