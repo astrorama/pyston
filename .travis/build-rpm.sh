@@ -13,10 +13,12 @@ CMAKEFLAGS="-DINSTALL_DOC=ON -DUSE_SPHINX_APIDOC=OFF"
 
 # Default to python 3
 PYTHON="python3"
+PYTHON_NUMPY="python3-numpy"
 
 if [ "$ID" == "fedora" ]; then
   if [ "$VERSION_ID" -lt 30 ]; then
     PYTHON="python"
+    PYTHON_NUMPY="python2-numpy"
   fi
 elif [ "$ID" == "centos" ]; then
   yum install -y epel-release
@@ -24,6 +26,7 @@ elif [ "$ID" == "centos" ]; then
     sed -i "s/enabled=0/enabled=1/" /etc/yum.repos.d/CentOS-PowerTools.repo
   else
     PYTHON="python"
+    PYTHON_NUMPY="python2-numpy"
   fi
 fi
 
@@ -62,7 +65,7 @@ yum install -y ${rpm_dev_deps} ${rpm_doc_deps}
 # Dependencies
 yum install -y cmake make gcc-c++ rpm-build \
   boost-devel $PYTHON-pytest log4cpp-devel doxygen \
-  ${PYTHON}-devel boost-${PYTHON}-devel $PYTHON-numpy \
+  ${PYTHON}-devel boost-${PYTHON}-devel ${PYTHON_NUMPY} \
   graphviz $PYTHON-sphinx
 
 # Build
