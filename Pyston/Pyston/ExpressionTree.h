@@ -63,8 +63,8 @@ protected:
   std::shared_ptr<Node<R>>   m_root;
   std::shared_ptr<Exception> m_reason;
 
-  ExpressionTreeBase(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason)
-      : m_is_compiled{compiled}, m_root{root}, m_reason{reason} {}
+  ExpressionTreeBase(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason_)
+      : m_is_compiled(compiled), m_root(root), m_reason(reason_) {}
 };
 
 /**
@@ -103,8 +103,8 @@ public:
 private:
   using ExpressionTreeBase<R>::m_root;
 
-  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason)
-      : ExpressionTreeBase<R>(compiled, root, reason) {}
+  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason_)
+      : ExpressionTreeBase<R>(compiled, root, reason_) {}
 
   friend class ExpressionTreeBuilder;
 };
@@ -140,8 +140,8 @@ public:
 private:
   using ExpressionTreeBase<R>::m_root;
 
-  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason)
-      : ExpressionTreeBase<R>(compiled, root, reason) {}
+  ExpressionTree(bool compiled, const std::shared_ptr<Node<R>>& root, const std::shared_ptr<Exception>& reason_)
+      : ExpressionTreeBase<R>(compiled, root, reason_) {}
 
   friend class ExpressionTreeBuilder;
 };

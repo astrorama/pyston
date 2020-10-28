@@ -49,9 +49,9 @@ public:
    * @param repr
    *    Human readable representation of the functor (i.e. +, -, abs, exp, ...)
    */
-  Function(const std::string& repr, std::function<R(const Context&, Args...)> functor,
+  Function(const std::string& repr_, std::function<R(const Context&, Args...)> functor,
            const std::shared_ptr<Node<Args>>... args)
-      : m_repr{repr}, m_functor{functor}, m_children{args...} {}
+      : m_repr(repr_), m_functor(functor), m_children(args...) {}
 
   /**
    * @copydoc Node::repr
@@ -98,7 +98,7 @@ public:
    *    Human readable representation of the operator
    */
   FunctionFactory(const std::string& repr, std::function<R(const Context&, Args...)> functor)
-      : m_repr{repr}, m_functor{functor} {}
+      : m_repr(repr), m_functor(functor) {}
 
   /**
    * Callable that creates the Node

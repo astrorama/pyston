@@ -34,7 +34,7 @@ struct PythonFixture {
 
   struct Singleton {
     Singleton() {
-      if (PyImport_AppendInittab("pyston", &PyInit_libPyston) == -1)
+      if (PyImport_AppendInittab("pyston", PYSTON_MODULE_INIT) == -1)
         abort();
       Py_Initialize();
       PyEval_InitThreads();

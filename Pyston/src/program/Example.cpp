@@ -18,6 +18,7 @@
  *
  */
 
+#include <fstream>
 #include <map>
 #include <string>
 
@@ -216,7 +217,7 @@ public:
       m_dot_file = args.at("dot-file").as<std::string>();
 
     // Initialize python
-    PyImport_AppendInittab("pyston", &PyInit_libPyston);
+    PyImport_AppendInittab("pyston", PYSTON_MODULE_INIT);
     Py_Initialize();
     PyEval_InitThreads();
     PyEval_SaveThread();

@@ -19,7 +19,7 @@
 #ifndef PYSTON_MODULE_H
 #define PYSTON_MODULE_H
 
-#include "Python.h"
+#include <Python.h>
 
 extern "C" {
 /**
@@ -28,7 +28,15 @@ extern "C" {
  *    PyImport_AppendInittab("pyston", &PyInit_libPyston)
  * This *must* be done before calling Py_Initialize
  */
+#if PY_MAJOR_VERSION >= 3
 PyObject* PyInit_libPyston(void);
+
+#define PYSTON_MODULE_INIT &PyInit_libPyston
+#else
+void initlibPyston(void);
+
+#define PYSTON_MODULE_INIT &initlibPyston
+#endif
 }
 
 #endif  // PYSTON_MODULE_H
