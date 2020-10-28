@@ -1,6 +1,8 @@
 Pyston
 ======
 
+[![Build Status](https://travis-ci.com/astrorama/pyston.svg?branch=develop)](https://travis-ci.com/astrorama/pyston)
+
 Pyston is a "quick and dirty" C++ library that can be used
 to build kind-of [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree)
 leveraging the Python interpreter.
