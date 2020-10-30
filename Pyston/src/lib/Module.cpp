@@ -113,6 +113,7 @@ struct RegisterNode {
         .def("arcsin", makeFunction<T(T)>("arcsin", ArcSin<T>()))
         .def("arccos", makeFunction<T(T)>("arccos", ArcCos<T>()))
         .def("arctan", makeFunction<T(T)>("arctan", ArcTan<T>()))
+        .def("arctan2", makeBinaryFunction<T(T,T)>("arctan2", ArcTan2<T>()))
         .def("sinh", makeFunction<T(T)>("sinh", Sinh<T>()))
         .def("cosh", makeFunction<T(T)>("cosh", Cosh<T>()))
         .def("tanh", makeFunction<T(T)>("tanh", Tanh<T>()))

@@ -153,6 +153,10 @@ using ArcCosh = UnaryWrapper<T, T, std::acosh>;
 template <typename T>
 using ArcTanh = UnaryWrapper<T, T, std::atanh>;
 
+/// Wraps atan2
+template <typename T>
+using ArcTan2 = BinaryWrapper<T,T, std::atan2>;
+
 }  // namespace Pyston
 
 #endif  // PYSTON_FUNCTORS_H
