@@ -16,44 +16,36 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef PYSTON_GIL_H
-#define PYSTON_GIL_H
-
-#include <Python.h>
+#include "Pyston/GIL.h"
 
 namespace Pyston {
 
-/**
- * RAII for the Global Interlock: Acquires at construction and releases at destruction
- */
-class GILLocker {
-public:
-  GILLocker();
+static size_t s_lock_count = 0;
 
-  ~GILLocker();
+GILLocker::GILLocker() {
+  m_state = PyGILState_Ensure();
+  ++s_lock_count;
+}
 
-  static size_t getLockCount();
+GILLocker::~GILLocker() {
+  PyGILState_Release(m_state);
+}
 
-protected:
-  PyGILState_STATE m_state;
-  friend class GILReleaser;
-};
+size_t GILLocker::getLockCount() {
+  return s_lock_count;
+}
 
-/**
- * RAII for the Global Interlock: Releases at construction and locks at destruction
- */
-class GILReleaser {
-public:
-  GILReleaser(PyGILState_STATE& state);
+GILReleaser::GILReleaser(PyGILState_STATE& state) : m_state(state) {
+  PyGILState_Release(m_state);
+}
 
-  GILReleaser(GILLocker&);
+GILReleaser::GILReleaser(GILLocker& locker) : m_state(locker.m_state) {
+  PyGILState_Release(m_state);
+}
 
-  ~GILReleaser();
-
-protected:
-  PyGILState_STATE& m_state;
-};
+GILReleaser::~GILReleaser() {
+  m_state = PyGILState_Ensure();
+  ++s_lock_count;
+}
 
 }  // end of namespace Pyston
-
-#endif  // PYSTON_GIL_H

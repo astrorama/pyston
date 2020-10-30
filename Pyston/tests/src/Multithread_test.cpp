@@ -86,6 +86,8 @@ BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
     func = tree;
   }
 
+  size_t lock_count_prev = GILLocker::getLockCount();
+
   std::vector<std::unique_ptr<Worker>> workers;
   boost::thread_group                  thread_group;
   for (int i = 0; i < NTHREADS; ++i) {
@@ -101,6 +103,8 @@ BOOST_FIXTURE_TEST_CASE(MultithreadCompiled_test, PythonFixture) {
       BOOST_CHECK_CLOSE(res_check, eval.result, 1e-8);
     }
   }
+
+  BOOST_CHECK_EQUAL(GILLocker::getLockCount() - lock_count_prev, 0);
 }
 
 /**
@@ -128,6 +132,8 @@ def with_conditional(x, y, z):
     func = tree;
   }
 
+  size_t lock_count_prev = GILLocker::getLockCount();
+
   std::vector<std::unique_ptr<Worker>> workers;
   {
     GILReleaser         releaser(gil_state);
@@ -146,6 +152,8 @@ def with_conditional(x, y, z):
       BOOST_CHECK_CLOSE(res_check, eval.result, 1e-8);
     }
   }
+
+  BOOST_CHECK_GT(GILLocker::getLockCount() - lock_count_prev, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
