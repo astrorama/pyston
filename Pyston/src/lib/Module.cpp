@@ -219,8 +219,11 @@ struct VariantToPython : public boost::static_visitor<boost::python::object> {
 };
 
 py::object attributeSetGetter(const AttributeSet& attr_set, const std::string& name) {
-  auto value = attr_set.at(name);
-  return boost::apply_visitor(VariantToPython(), value);
+  auto vi = attr_set.find(name);
+  if (vi == attr_set.end()) {
+    throw std::out_of_range("AttributeSet has no attribute '" + name + "'");
+  }
+  return boost::apply_visitor(VariantToPython(), vi->second);
 }
 
 /**
