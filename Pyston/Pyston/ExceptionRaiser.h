@@ -20,6 +20,7 @@
 #define PYSTON_EXCEPTIONRAISER_H
 
 #include "Pyston/Graph/Node.h"
+#include "Pyston/PythonExceptions.h"
 #include <boost/python/errors.hpp>
 #include <memory>
 #include <string>
@@ -39,8 +40,10 @@ public:
    * Constructor
    * @param msg
    *    Message for the exception
+   * @param recoverable
+   *    If true, the exception is considered to be recoverable (fallback python evaluation)
    */
-  ExceptionRaiser(const std::string& msg) : m_msg{msg} {}
+  ExceptionRaiser(const std::string& msg, bool recoverable) : m_msg{msg}, m_recoverable{recoverable} {}
 
   /**
    * Callable
@@ -48,12 +51,15 @@ public:
    *    Always. It will set previously a RuntimeError with the given message.
    */
   void operator()(const std::shared_ptr<Node<T>>&) {
-    PyErr_SetString(PyExc_RuntimeError, m_msg.c_str());
-    boost::python::throw_error_already_set();
+    if (m_recoverable)
+      throw RecoverableError(m_msg.c_str());
+    else
+      throw UnrecoverableError(m_msg.c_str());
   }
 
 private:
   std::string m_msg;
+  bool m_recoverable;
 };
 
 }  // end of namespace Pyston

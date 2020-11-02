@@ -19,7 +19,8 @@
 #ifndef PYSTON_ATTRIBUTESET_H
 #define PYSTON_ATTRIBUTESET_H
 
-#include "Placeholder.h"
+#include "Pyston/Graph/Placeholder.h"
+#include "Pyston/PythonExceptions.h"
 #include <boost/python/object.hpp>
 #include <set>
 #include <string>
@@ -97,13 +98,15 @@ public:
    * AttrGetter
    * @param name
    *    Parameter name
+   * @throws UnrecoverableError
+   *    If the name is not a known parameter. Fallback to Python interpretation will not help.
    * @details
    *    It uses a boost visitor to generate the right AttrGetter depending on the
    *    value stored on the prototype object passed to the constructor
    */
   boost::python::object get(const std::string& name) const {
     if (m_attrs.count(name) == 0)
-      throw std::out_of_range("AttributeSet object has no attribute '" + name + "'");
+      throw UnrecoverableError("AttributeSet object has no attribute '" + name + "'");
     return boost::apply_visitor(AttrGetterFactory(m_pos, name), m_attrs.at(name));
   }
 

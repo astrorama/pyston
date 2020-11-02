@@ -18,12 +18,11 @@
 
 #include "Pyston/ExceptionRaiser.h"
 #include "Pyston/Graph/AttributeSet.h"
-#include "Pyston/Graph/Cast.h"
-#include "Pyston/Graph/Constant.h"
 #include "Pyston/Graph/Functors.h"
 #include "Pyston/Graph/Placeholder.h"
 #include "Pyston/Helpers.h"
 #include "Pyston/NodeConverter.h"
+#include "Pyston/PythonExceptions.h"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -58,6 +57,10 @@ PyObject* shared_ptr_to_python(std::shared_ptr<T> const& x) {
 
 namespace Pyston {
 
+// Sadly these have to be global
+PyObject* pyRecoverableError   = nullptr;
+PyObject* pyUnrecoverableError = nullptr;
+
 template <typename T>
 struct RegisterNode {
 
@@ -90,8 +93,7 @@ struct RegisterNode {
    * Methods for floating point types
    */
   template <typename Y>
-  static void specialized(NodeType& node,
-                          typename std::enable_if<std::is_floating_point<Y>::value>::type* = nullptr) {
+  static void specialized(NodeType& node, typename std::enable_if<std::is_floating_point<Y>::value>::type* = nullptr) {
     node.def("__pow__", makeFunction<T(T, T)>("^", Pow<T>()))
         .def("__rpow__", makeBinaryFunction<T(T, T)>("^", Pow<T>(), true))
         .def("__round__", makeFunction<T(T)>("round", Round<T>()))
@@ -113,7 +115,7 @@ struct RegisterNode {
         .def("arcsin", makeFunction<T(T)>("arcsin", ArcSin<T>()))
         .def("arccos", makeFunction<T(T)>("arccos", ArcCos<T>()))
         .def("arctan", makeFunction<T(T)>("arctan", ArcTan<T>()))
-        .def("arctan2", makeBinaryFunction<T(T,T)>("arctan2", ArcTan2<T>()))
+        .def("arctan2", makeBinaryFunction<T(T, T)>("arctan2", ArcTan2<T>()))
         .def("sinh", makeFunction<T(T)>("sinh", Sinh<T>()))
         .def("cosh", makeFunction<T(T)>("cosh", Cosh<T>()))
         .def("tanh", makeFunction<T(T)>("tanh", Tanh<T>()))
@@ -126,8 +128,7 @@ struct RegisterNode {
    * Methods for the boolean type
    */
   template <typename Y>
-  static void specialized(NodeType& node,
-                          typename std::enable_if<std::is_same<Y, bool>::value>::type* = nullptr) {
+  static void specialized(NodeType& node, typename std::enable_if<std::is_same<Y, bool>::value>::type* = nullptr) {
     // Upcast to double and int
     defCastOperations<double>(node);
     defCastOperations<int64_t>(node);
@@ -176,9 +177,10 @@ struct RegisterNode {
 #else
 #define AS_BOOL_METHOD "__nonzero__"
 #endif
-    node.def(AS_BOOL_METHOD, py::make_function(ExceptionRaiser<T>("Can not use variable placeholders in conditionals"),
-                                               py::default_call_policies(),
-                                               boost::mpl::vector<void, const std::shared_ptr<Node<T>>>()));
+    node.def(AS_BOOL_METHOD,
+             py::make_function(ExceptionRaiser<T>("Can not use variable placeholders in conditionals", true),
+                               py::default_call_policies(),
+                               boost::mpl::vector<void, const std::shared_ptr<Node<T>>>()));
   }
 
   static void Do() {
@@ -195,7 +197,7 @@ struct RegisterNode {
     // Register convertion between shared pointer and Node
     py::register_ptr_to_python<std::shared_ptr<Node<T>>>();
 #if BOOST_VERSION < 106300
-    py::implicitly_convertible<std::shared_ptr<Placeholder<T>>,std::shared_ptr<Node<T>>>();
+    py::implicitly_convertible<std::shared_ptr<Placeholder<T>>, std::shared_ptr<Node<T>>>();
 #endif
     // Custom conversion so primitive values can be converted to a node
     py::converter::registry::push_back(&NodeConverter<T>::isConvertible, &NodeConverter<T>::construct,
@@ -221,7 +223,7 @@ struct VariantToPython : public boost::static_visitor<boost::python::object> {
 py::object attributeSetGetter(const AttributeSet& attr_set, const std::string& name) {
   auto vi = attr_set.find(name);
   if (vi == attr_set.end()) {
-    throw std::out_of_range("AttributeSet has no attribute '" + name + "'");
+    throw UnrecoverableError("AttributeSet has no attribute '" + name + "'");
   }
   return boost::apply_visitor(VariantToPython(), vi->second);
 }
@@ -245,11 +247,33 @@ void RegisterAttributeSet() {
 }
 
 /**
- * Transform std::out_of_range to python AttributeError with
- * a custom flag to know it is *not* recoverable
+ * Create a new exception on the Python side
+ * @details
+ *  Used by Recoverable and Unrecoverable errors, which can not be directly exposed,
+ *  since they do not (and can not due to boost::python API limitations) inherit from Python's Exception
  */
-void translate_exception(const std::out_of_range& e) {
-  PyErr_SetString(PyExc_RuntimeError, e.what());
+static PyObject* createExceptionClass(const std::string& name) {
+  std::string scope   = py::extract<std::string>(py::scope().attr("__name__"));
+  std::string qname   = scope + "." + name;
+  PyObject*   excType = PyErr_NewException(qname.c_str(), PyExc_RuntimeError, nullptr);
+  if (!excType)
+    py::throw_error_already_set();
+  py::scope().attr(name.c_str()) = py::handle<>(py::borrowed(excType));
+  return excType;
+}
+
+/**
+ * Translate C++ recoverable exception to its Python counterpart
+ */
+void translateRecoverable(const RecoverableError& e) {
+  PyErr_SetString(pyRecoverableError, e.what());
+}
+
+/**
+ * Translate C++ unrecoverable exception to its Python counterpart
+ */
+void translateUnrecoverable(const UnrecoverableError& e) {
+  PyErr_SetString(pyUnrecoverableError, e.what());
 }
 
 BOOST_PYTHON_MODULE(pyston) {
@@ -264,8 +288,13 @@ BOOST_PYTHON_MODULE(pyston) {
   py::class_<std::vector<double>>("_DoubleVector").def(py::vector_indexing_suite<std::vector<double>>());
   py::class_<std::vector<int64_t>>("_IntVector").def(py::vector_indexing_suite<std::vector<int64_t>>());
 
+  // Exceptions
+  pyRecoverableError   = createExceptionClass("RecoverableError");
+  pyUnrecoverableError = createExceptionClass("UnrecoverableError");
+
   // Exception translation
-  py::register_exception_translator<std::out_of_range>(translate_exception);
+  py::register_exception_translator<RecoverableError>(&translateRecoverable);
+  py::register_exception_translator<UnrecoverableError>(&translateUnrecoverable);
 }
 
 }  // end of namespace Pyston

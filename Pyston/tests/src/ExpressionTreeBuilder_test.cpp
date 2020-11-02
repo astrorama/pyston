@@ -359,6 +359,16 @@ BOOST_FIXTURE_TEST_CASE(UnknownAttribute_test, PythonFixture) {
 }
 
 /**
+ * Using an unknown member of, say, numpy, must be fast-fail
+ */
+BOOST_FIXTURE_TEST_CASE(UnknownNumpyMethod_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+  auto                  py_func = py::eval("lambda x: np.grapefruit(x)", main_namespace);
+
+  BOOST_CHECK_THROW(builder.build<double(double)>(py_func), Exception);
+}
+
+/**
  * Attribute set with no prototype, should not even compile
  * Uncomment to actually test this
  */

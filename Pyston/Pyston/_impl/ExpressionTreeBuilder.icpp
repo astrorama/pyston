@@ -23,6 +23,9 @@
 
 namespace Pyston {
 
+// Defined in Module.cpp
+extern PyObject* pyRecoverableError;
+
 template <unsigned pos, typename... AN>
 struct placeholderHelper;
 
@@ -69,12 +72,12 @@ ExpressionTree<R(Args...)> ExpressionTreeBuilder::compiledOrWrapped(const boost:
     root         = boost::python::extract<std::shared_ptr<Node<R>>>(py_comp);
     compiled     = true;
   }
-  // If failed to do so (i.e. placeholder used on a control flow),
-  // wrap the call to python
   catch (const boost::python::error_already_set&) {
-    if (PyErr_ExceptionMatches(PyExc_RuntimeError)) {
+    // If the error is not recoverable, just bail out
+    if (!PyErr_ExceptionMatches(pyRecoverableError)) {
       throw Exception();
     }
+    // If it is recoverable (i.e. placeholder used on a control flow), wrap the call to python
     reason = std::make_shared<Exception>();
     PyErr_Clear();
     root     = std::make_shared<PythonCall<R>>(pyfunc);
