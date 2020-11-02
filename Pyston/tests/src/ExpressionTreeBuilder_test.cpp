@@ -333,8 +333,8 @@ BOOST_FIXTURE_TEST_CASE(WithObjectRef_test, PythonFixture) {
  */
 BOOST_FIXTURE_TEST_CASE(WithVectorOfDouble_test, PythonFixture) {
   ExpressionTreeBuilder builder;
+  auto                  py_func = py::eval("lambda x, y, z: x + y + z", main_namespace);
 
-  auto                                              py_func = py::eval("lambda x, y, z: x + y + z", main_namespace);
   std::function<double(const std::vector<double>&)> transparent;
   {
     auto tree = builder.build<double(const std::vector<double>&)>(py_func, 3);
@@ -345,6 +345,17 @@ BOOST_FIXTURE_TEST_CASE(WithVectorOfDouble_test, PythonFixture) {
 
   double r = transparent({1, 2, 3});
   BOOST_CHECK_EQUAL(6, r);
+}
+
+/**
+ * Accessing an unknown attribute must be a fast-fail
+ */
+BOOST_FIXTURE_TEST_CASE(UnknownAttribute_test, PythonFixture) {
+  ExpressionTreeBuilder builder;
+  auto                  py_func = py::eval("lambda x: x.radius + 10", main_namespace);
+
+  AttributeSet prototype{{"flux", 0.}};
+  BOOST_CHECK_THROW(builder.build<double(const AttributeSet&)>(py_func, prototype), Exception);
 }
 
 /**

@@ -72,6 +72,9 @@ ExpressionTree<R(Args...)> ExpressionTreeBuilder::compiledOrWrapped(const boost:
   // If failed to do so (i.e. placeholder used on a control flow),
   // wrap the call to python
   catch (const boost::python::error_already_set&) {
+    if (PyErr_ExceptionMatches(PyExc_RuntimeError)) {
+      throw Exception();
+    }
     reason = std::make_shared<Exception>();
     PyErr_Clear();
     root     = std::make_shared<PythonCall<R>>(pyfunc);

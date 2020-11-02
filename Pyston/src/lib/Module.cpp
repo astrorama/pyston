@@ -244,6 +244,14 @@ void RegisterAttributeSet() {
   attr_set.def("__getattr__", &attributeSetGetter);
 }
 
+/**
+ * Transform std::out_of_range to python AttributeError with
+ * a custom flag to know it is *not* recoverable
+ */
+void translate_exception(const std::out_of_range& e) {
+  PyErr_SetString(PyExc_RuntimeError, e.what());
+}
+
 BOOST_PYTHON_MODULE(pyston) {
   RegisterNode<double>::Do();
   RegisterNode<int64_t>::Do();
@@ -254,8 +262,10 @@ BOOST_PYTHON_MODULE(pyston) {
 
   // Vector types
   py::class_<std::vector<double>>("_DoubleVector").def(py::vector_indexing_suite<std::vector<double>>());
-
   py::class_<std::vector<int64_t>>("_IntVector").def(py::vector_indexing_suite<std::vector<int64_t>>());
+
+  // Exception translation
+  py::register_exception_translator<std::out_of_range>(translate_exception);
 }
 
 }  // end of namespace Pyston
