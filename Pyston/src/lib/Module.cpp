@@ -255,7 +255,7 @@ void RegisterAttributeSet() {
 static PyObject* createExceptionClass(const std::string& name) {
   std::string scope   = py::extract<std::string>(py::scope().attr("__name__"));
   std::string qname   = scope + "." + name;
-  PyObject*   excType = PyErr_NewException(qname.c_str(), PyExc_RuntimeError, nullptr);
+  PyObject*   excType = PyErr_NewException(const_cast<char*>(qname.c_str()), PyExc_RuntimeError, nullptr);
   if (!excType)
     py::throw_error_already_set();
   py::scope().attr(name.c_str()) = py::handle<>(py::borrowed(excType));
