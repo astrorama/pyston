@@ -104,7 +104,7 @@ def rm(bintray, args):
             answer = input(
                 'You are trying to remove protected files. Do you really want to do that? (yes or no)'
             )
-            if answer.lower() != 'yes':
+            if answer.lower()[0] != 'y':
                 raise ValueError('Trying to remove protected files! Aborting')
 
     if args.recursive:
