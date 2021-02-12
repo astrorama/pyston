@@ -1,5 +1,5 @@
 $PYTHON-devel
-$PYTHON-numpy
+python-numpy
 $PYTHON-pytest
 $PYTHON-sphinx
 boost-$PYTHON-devel
