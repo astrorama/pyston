@@ -1,7 +1,7 @@
 $PYTHON-devel
-python-numpy
 $PYTHON-pytest
 $PYTHON-sphinx
+$NUMPY
 boost-$PYTHON-devel
 boost-devel
 log4cpp-devel
