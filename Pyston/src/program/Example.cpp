@@ -219,7 +219,9 @@ public:
     // Initialize python
     PyImport_AppendInittab("pyston", PYSTON_MODULE_INIT);
     Py_Initialize();
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION <= 6
     PyEval_InitThreads();
+#endif
     PyEval_SaveThread();
 
     fs::path pyfile = args.at("file").as<std::string>();

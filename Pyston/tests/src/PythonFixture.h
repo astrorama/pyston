@@ -40,7 +40,9 @@ struct PythonFixture {
       if (PyImport_AppendInittab("pyston", PYSTON_MODULE_INIT) == -1)
         abort();
       Py_Initialize();
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION <= 6
       PyEval_InitThreads();
+#endif
       PyEval_SaveThread();
     }
   };
