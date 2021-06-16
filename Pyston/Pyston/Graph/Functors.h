@@ -157,6 +157,10 @@ using ArcTanh = UnaryWrapper<T, T, std::atanh>;
 template <typename T>
 using ArcTan2 = BinaryWrapper<T,T, std::atan2>;
 
+/// Wraps fmod
+template <typename T>
+using Fmod = BinaryWrapper<T, T, std::fmod>;
+
 }  // namespace Pyston
 
 #endif  // PYSTON_FUNCTORS_H

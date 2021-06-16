@@ -121,7 +121,8 @@ struct RegisterNode {
         .def("tanh", makeFunction<T(T)>("tanh", Tanh<T>()))
         .def("arcsinh", makeFunction<T(T)>("arcsinh", ArcSinh<T>()))
         .def("arccosh", makeFunction<T(T)>("arccosh", ArcCosh<T>()))
-        .def("arctanh", makeFunction<T(T)>("arctanh", ArcTanh<T>()));
+        .def("arctanh", makeFunction<T(T)>("arctanh", ArcTanh<T>()))
+        .def("fmod", makeFunction<T(T,T)>("fmod", Fmod<T>()));
   }
 
   /**
